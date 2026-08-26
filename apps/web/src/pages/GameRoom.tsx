@@ -25,6 +25,10 @@ export function GameRoom() {
   const [playerIds, setPlayerIds] = useState<string[]>([]);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const activityCounter = useRef(0);
+  // Ref sincron cu `playerIds`, ca să putem afla adversarul (pentru mesajul de "a pierdut")
+  // din interiorul unui handler de socket fără să depindem de closure-ul stale al efectului.
+  const playerIdsRef = useRef<string[]>([]);
+  playerIdsRef.current = playerIds;
 
   // Plasarea avioanelor: cele nedescoperite/neplasate stau în "tray" (coloana dreapta),
   // cele plasate au o poziție (head) și apar pe tablă. Momentan doar local (fără sync
@@ -111,7 +115,12 @@ export function GameRoom() {
       if (payload.gameId !== gameId) return;
       setPhase("over");
       setWinner(payload.winnerId);
-      pushActivity({ playerId: payload.winnerId, type: "won", at: Date.now() });
+      const at = Date.now();
+      pushActivity({ playerId: payload.winnerId, type: "won", at });
+      const loserId = playerIdsRef.current.find((id) => id !== payload.winnerId);
+      if (loserId) {
+        pushActivity({ playerId: loserId, type: "lost", at: at + 1 });
+      }
     };
 
     socket.on("room:state", handleRoomState);
@@ -248,13 +257,10 @@ export function GameRoom() {
             )}
 
             {phase === "over" && (
-              <div className="plane-tray waiting-panel">
-                <p className="plane-tray__empty">
-                  {winner === playerId ? "Ai câștigat! 🎉" : "Ai pierdut."}
-                </p>
+              <>
                 <p className="board-title">Tabla adversarului</p>
                 <Board markedCells={myShots} />
-              </div>
+              </>
             )}
           </div>
         </div>
@@ -278,6 +284,7 @@ export function GameRoom() {
                 {entry.type === "joined" && "a intrat în sală"}
                 {entry.type === "left" && "a ieșit din sală"}
                 {entry.type === "won" && "a câștigat jocul! 🏆"}
+                {entry.type === "lost" && "a pierdut jocul."}
               </span>
             </li>
           ))}
