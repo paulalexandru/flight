@@ -172,7 +172,7 @@ body {
 /* Sala de joc: coloana principala (stanga) + coloana ingusta de informatii (dreapta) */
 .game-room {
   width: 100%;
-  max-width: 1080px;
+  max-width: 1242px;
   display: flex;
   gap: 20px;
   align-items: flex-start;
