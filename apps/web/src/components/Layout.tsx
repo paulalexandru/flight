@@ -28,6 +28,8 @@ export function Layout({ children }: { children: ReactNode }) {
         </nav>
       </aside>
       <main className="app-content">{children}</main>
+      {/* Coloană rezervată pentru reclame (goală momentan). */}
+      <aside className="app-ads-col" aria-hidden="true" />
     </div>
   );
 }

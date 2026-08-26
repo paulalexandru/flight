@@ -82,9 +82,17 @@ body {
   flex: 1;
   background: #302e2b;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
-  padding: 48px 24px;
+  padding: 48px 24px 48px 100px;
+}
+
+/* Coloană rezervată pe viitor pentru reclame (goală momentan). */
+.app-ads-col {
+  width: 240px;
+  flex-shrink: 0;
+  background: #1e1c1a;
+  border-left: 1px solid #000;
 }
 
 .work-panel {
