@@ -234,7 +234,6 @@ export function GameRoom() {
     <div className="game-room">
       <section className="game-room__main">
         <h2>Sala de joc #{gameId}</h2>
-        <p className="status-text">Id-ul tău: {playerId}</p>
         {opponentJoined ? (
           <span className="badge ready">Adversarul a intrat în sală!</span>
         ) : (
@@ -287,8 +286,14 @@ export function GameRoom() {
             )}
 
             {phase === "waiting" && (
-              <div className="plane-tray waiting-panel">
-                <p className="plane-tray__empty">Se așteaptă după celălalt jucător...</p>
+              <div className="board-title">
+                <span className="player-avatar" aria-hidden="true">
+                  👤
+                </span>
+                <span className="board-title__name-row">
+                  Adversarul
+                  <span className="waiting-hint">Se așteaptă...</span>
+                </span>
               </div>
             )}
 

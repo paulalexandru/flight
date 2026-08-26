@@ -149,7 +149,7 @@ export function Board({
                         top: "50%",
                         left: "50%",
                         transform: "translate(-50%, -50%)",
-                        fontSize: 12,
+                        fontSize: 15,
                         color: "#fff",
                         textShadow: "0 0 2px #000",
                       }}
