@@ -16,45 +16,65 @@ export function registerGameSocketHandlers(io: AppServer): void {
   io.on("connection", (socket: AppSocket) => {
     const player = getPlayerFromSocket(socket);
 
-    socket.on("game:join", ({ gameId }) => {
-      let game = getGame(gameId);
-      if (!game) {
-        game = createGame(gameId, player);
-      } else {
-        const joined = joinGame(gameId, player);
-        if (!joined) {
-          socket.emit("game:error", { message: "Partida este deja plină." });
+    socket.on("game:join", async ({ gameId }) => {
+      try {
+        let game = getGame(gameId);
+        if (!game) {
+          game = await createGame(gameId, player);
+        } else {
+          const joined = await joinGame(gameId, player);
+          if (!joined) {
+            socket.emit("game:error", { message: "Partida este deja plină." });
+            return;
+          }
+          game = joined;
+        }
+
+        socket.join(gameId);
+        io.to(gameId).emit("game:state", game);
+      } catch (error) {
+        console.error("game:join failed", error);
+        socket.emit("game:error", { message: "Nu s-a putut crea/alătura partida." });
+      }
+    });
+
+    socket.on("game:placePlanes", async ({ gameId, planes }) => {
+      try {
+        const game = await placePlanes(gameId, player.id, planes);
+        if (!game) {
+          socket.emit("game:error", { message: "Partida nu a fost găsită." });
           return;
         }
-        game = joined;
+        io.to(gameId).emit("game:state", game);
+      } catch (error) {
+        console.error("game:placePlanes failed", error);
+        socket.emit("game:error", { message: "Nu s-au putut salva avioanele." });
       }
-
-      socket.join(gameId);
-      io.to(gameId).emit("game:state", game);
     });
 
-    socket.on("game:placePlanes", ({ gameId, planes }) => {
-      const game = placePlanes(gameId, player.id, planes);
-      if (!game) {
-        socket.emit("game:error", { message: "Partida nu a fost găsită." });
-        return;
+    socket.on("game:shoot", async ({ gameId, cell }) => {
+      try {
+        const outcome = await shoot(gameId, player.id, cell);
+        if (!outcome) {
+          socket.emit("game:error", { message: "Mutare invalidă." });
+          return;
+        }
+        io.to(gameId).emit("game:state", outcome.game);
+      } catch (error) {
+        console.error("game:shoot failed", error);
+        socket.emit("game:error", { message: "Nu s-a putut înregistra mutarea." });
       }
-      io.to(gameId).emit("game:state", game);
     });
 
-    socket.on("game:shoot", ({ gameId, cell }) => {
-      const outcome = shoot(gameId, player.id, cell);
-      if (!outcome) {
-        socket.emit("game:error", { message: "Mutare invalidă." });
-        return;
+    socket.on("game:resign", async ({ gameId }) => {
+      try {
+        const game = await resign(gameId, player.id);
+        if (!game) return;
+        io.to(gameId).emit("game:state", game);
+      } catch (error) {
+        console.error("game:resign failed", error);
+        socket.emit("game:error", { message: "Nu s-a putut abandona partida." });
       }
-      io.to(gameId).emit("game:state", outcome.game);
-    });
-
-    socket.on("game:resign", ({ gameId }) => {
-      const game = resign(gameId, player.id);
-      if (!game) return;
-      io.to(gameId).emit("game:state", game);
     });
   });
 }
