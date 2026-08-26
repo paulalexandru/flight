@@ -79,7 +79,7 @@ body {
 
 /* Zona centrala de lucru - fundal mai deschis, ca sa se diferentieze clar de meniu */
 .app-content {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   background: #302e2b;
   display: flex;
