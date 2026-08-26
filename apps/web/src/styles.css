@@ -90,8 +90,7 @@ body {
 
 /* Coloană rezervată pe viitor pentru reclame (goală momentan). */
 .app-ads-col {
-  flex: 1 1 240px;
-  min-width: 0;
+  flex: 0 0 240px;
   background: #302e2b;
 }
 
@@ -460,7 +459,7 @@ body {
 /* ---------- Responsive breakpoints ---------- */
 
 /* Ecrane medii: reduce padding-ul lateral, coloana de reclame devine mai ingusta */
-@media (max-width: 1400px) {
+@media (max-width: 1700px) {
   .app-content {
     padding-left: 48px;
   }
