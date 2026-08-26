@@ -94,7 +94,7 @@ export function Board({
               ? PLANE_COLORS[planeColorIndex(occupyingPlaneId)]
               : undefined;
           const isPreview = previewKeys.has(key);
-          let background = "#ebecd0";
+          let background = (row + col) % 2 === 0 ? "#ffffff47" : "#6363637d";
           if (occupyingPlaneId) background = planeColor?.background ?? "#81b64c";
           if (isPreview) background = previewValid ? "#b6e388" : "#e77b7b";
 
