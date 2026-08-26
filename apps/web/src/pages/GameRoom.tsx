@@ -199,10 +199,15 @@ export function GameRoom() {
 
         <div className="game-room__work-row">
           <div className="game-room__board-col">
-            <p className="board-title">
-              Tabla ta
-              {phase === "battle" && !isMyTurn && <span className="turn-hourglass">⏳</span>}
-            </p>
+            <div className="board-title">
+              <span className="player-avatar" aria-hidden="true">
+                👤
+              </span>
+              <span className="board-title__name-row">
+                Tu
+                {phase === "battle" && isMyTurn && <span className="turn-hourglass">⏳</span>}
+              </span>
+            </div>
             <Board
               planes={placedPlanes}
               onPlanesChange={isPlacingPhase ? setPlacedPlanes : undefined}
@@ -245,17 +250,27 @@ export function GameRoom() {
 
             {phase === "battle" && (
               <>
-                <p className="board-title">
-                  Tabla adversarului
-                  {isMyTurn && <span className="turn-hourglass">⏳</span>}
-                </p>
+                <div className="board-title">
+                  <span className="player-avatar" aria-hidden="true">
+                    👤
+                  </span>
+                  <span className="board-title__name-row">
+                    Adversarul
+                    {!isMyTurn && <span className="turn-hourglass">⏳</span>}
+                  </span>
+                </div>
                 <Board onCellClick={handleShootOpponent} markedCells={myShots} />
               </>
             )}
 
             {phase === "over" && (
               <>
-                <p className="board-title">Tabla adversarului</p>
+                <div className="board-title">
+                  <span className="player-avatar" aria-hidden="true">
+                    👤
+                  </span>
+                  <span className="board-title__name-row">Adversarul</span>
+                </div>
                 <Board markedCells={myShots} />
               </>
             )}
