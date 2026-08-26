@@ -82,7 +82,7 @@ export function Board({
   return (
     <div
       className="board-grid"
-      style={{ display: "grid", gridTemplateColumns: `repeat(${BOARD_SIZE}, 42px)`, gap: 3 }}
+      style={{ display: "grid", gridTemplateColumns: `repeat(${BOARD_SIZE}, 42px)`, gap: 0 }}
       onDragLeave={() => setHoverCell(null)}
     >
       {rows.map((row) =>
@@ -95,7 +95,7 @@ export function Board({
               ? PLANE_COLORS[planeColorIndex(occupyingPlaneId)]
               : undefined;
           const isPreview = previewKeys.has(key);
-          let background = "#45423c";
+          let background = (row + col) % 2 === 0 ? "#45423c" : "#4d4a42";
           if (occupyingPlaneId) background = planeColor?.background ?? "#81b64c";
           if (isPreview) background = previewValid ? "#b6e388" : "#e77b7b";
 
