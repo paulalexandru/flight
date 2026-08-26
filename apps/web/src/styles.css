@@ -456,3 +456,106 @@ body {
 .activity-log__action {
   color: #8a8783;
 }
+
+/* ---------- Responsive breakpoints ---------- */
+
+/* Ecrane medii: reduce padding-ul lateral, coloana de reclame devine mai ingusta */
+@media (max-width: 1400px) {
+  .app-content {
+    padding-left: 48px;
+  }
+
+  .app-ads-col {
+    min-width: 0;
+    flex: 0 0 0px;
+    width: 0;
+    overflow: hidden;
+  }
+}
+
+/* Tablete: meniul lateral se ingusteaza la iconite, sidebarul de notificari e mai mic */
+@media (max-width: 1100px) {
+  .app-sidebar {
+    width: 72px;
+    padding: 24px 8px;
+  }
+
+  .app-sidebar__logo {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .app-sidebar__link {
+    font-size: 12px;
+    padding: 8px 4px;
+    text-align: center;
+  }
+
+  .app-content {
+    padding: 32px 24px;
+  }
+
+  .game-room {
+    width: 100%;
+  }
+
+  .game-room__sidebar {
+    width: 260px;
+  }
+}
+
+/* Ecrane inguste: coloanele din game-room se pun una sub alta */
+@media (max-width: 860px) {
+  .game-room {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .game-room__work-row {
+    flex-direction: column;
+  }
+
+  .game-room__board-col,
+  .game-room__extra-col {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .game-room__sidebar {
+    width: 100%;
+  }
+}
+
+/* Mobil: meniul lateral revine complet, dar mai compact, continutul ocupa toata latimea */
+@media (max-width: 600px) {
+  .app-layout {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 16px;
+    border-right: none;
+    border-bottom: 1px solid #000;
+  }
+
+  .app-sidebar__logo {
+    margin: 0 16px 0 0;
+  }
+
+  .app-sidebar__nav {
+    flex-direction: row;
+  }
+
+  .app-content {
+    padding: 24px 16px;
+    justify-content: center;
+  }
+
+  .work-panel {
+    padding: 24px;
+  }
+}
