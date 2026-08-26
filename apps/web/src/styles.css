@@ -367,8 +367,9 @@ body {
   position: absolute;
   inset: 0;
   border-radius: 6px;
-  background: rgba(231, 76, 60, 0.55);
-  font-size: 22px;
+  font-size: 24px;
+  color: #f1c40f;
+  text-shadow: 0 0 3px #000, 0 0 6px #000;
   display: flex;
   align-items: center;
   justify-content: center;
