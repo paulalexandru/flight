@@ -85,6 +85,7 @@ body {
   justify-content: flex-start;
   align-items: flex-start;
   padding: 48px 24px 48px 100px;
+  max-width: 1080px;
 }
 
 /* Coloană rezervată pe viitor pentru reclame (goală momentan). */
@@ -384,7 +385,7 @@ body {
 
 
 .game-room__sidebar {
-  width: 280px;
+  width: 360px;
   flex-shrink: 0;
   background: #201f1c;
   border-radius: 12px;
