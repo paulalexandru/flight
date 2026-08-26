@@ -13,7 +13,7 @@ export type PlanePlacement = {
   orientation: PlaneOrientation;
 };
 
-export type ShotResult = "hit" | "miss" | "sunk";
+export type ShotResult = "hit" | "miss" | "sunk" | "head";
 
 export type Shot = {
   cell: Cell;

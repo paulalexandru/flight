@@ -2,9 +2,11 @@ import { BOARD_SIZE, getPlaneCells, isValidPlanePlacement, getOccupiedCellKeys }
 import type { Cell, PlanePlacement } from "@flight/types";
 import { useState } from "react";
 
+import type { ShotResult } from "@flight/types";
+
 interface BoardProps {
   onCellClick?: (cell: Cell) => void;
-  markedCells?: { cell: Cell; status: "hit" | "miss" | "sunk" }[];
+  markedCells?: { cell: Cell; status: ShotResult }[];
   /** Avioanele plasate deja pe tablă (editabile prin drag & drop dacă `onPlanesChange` e furnizat). */
   planes?: PlanePlacement[];
   onPlanesChange?: (planes: PlanePlacement[]) => void;
@@ -88,6 +90,7 @@ export function Board({
           const occupyingPlaneId = planeCellMap.get(key);
           const isPreview = previewKeys.has(key);
           let background = status === "hit" || status === "sunk" ? "#e74c3c" : status === "miss" ? "#95a5a6" : "#3a5a78";
+          if (status === "head") background = "#f1c40f";
           if (occupyingPlaneId && !status) background = "#81b64c";
           if (isPreview) background = previewValid ? "#b6e388" : "#e77b7b";
 
@@ -116,8 +119,12 @@ export function Board({
                 background,
                 border: occupyingPlaneId ? "1px solid #5f9a3a" : "1px solid #2c2a27",
                 cursor: occupyingPlaneId && onPlanesChange ? "grab" : onCellClick ? "pointer" : "default",
+                fontSize: 20,
+                lineHeight: "42px",
               }}
-            />
+            >
+              {status === "head" ? "★" : null}
+            </button>
           );
         })
       )}

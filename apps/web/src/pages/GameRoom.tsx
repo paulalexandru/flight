@@ -199,7 +199,10 @@ export function GameRoom() {
 
         <div className="game-room__work-row">
           <div className="game-room__board-col">
-            <p className="board-title">Tabla ta</p>
+            <p className="board-title">
+              Tabla ta
+              {phase === "battle" && !isMyTurn && <span className="turn-hourglass">⏳</span>}
+            </p>
             <Board
               planes={placedPlanes}
               onPlanesChange={isPlacingPhase ? setPlacedPlanes : undefined}
@@ -242,9 +245,11 @@ export function GameRoom() {
 
             {phase === "battle" && (
               <>
-                <p className="board-title">Tabla adversarului</p>
+                <p className="board-title">
+                  Tabla adversarului
+                  {isMyTurn && <span className="turn-hourglass">⏳</span>}
+                </p>
                 <Board onCellClick={handleShootOpponent} markedCells={myShots} />
-                <p className="status-text">{isMyTurn ? "Este rândul tău să tragi." : "Așteaptă mutarea adversarului..."}</p>
               </>
             )}
 

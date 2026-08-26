@@ -18,6 +18,11 @@ export function resolveShot(
     const isHit = planeCells.some((c) => cellKey(c) === key);
     if (!isHit) continue;
 
+    const isHead = cellKey(plane.head) === key;
+    if (isHead) {
+      return { result: "head", planeId: plane.id };
+    }
+
     const hitKeysAfterThisShot = new Set(previousHitKeys);
     hitKeysAfterThisShot.add(key);
 
