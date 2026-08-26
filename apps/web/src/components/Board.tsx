@@ -103,6 +103,25 @@ export function Board({
           if (status === "hit" || status === "sunk") icon = "❌";
           else if (status === "head") icon = "❌";
 
+          // Pentru un avion, marginile spre celule ale ACELUIAȘI avion sunt punctate
+          // (delimitare internă a formei), iar marginile spre exterior (afara avionului
+          // sau spre alt avion) rămân continue, ca un contur clar al formei.
+          let borderTop: string | undefined;
+          let borderRight: string | undefined;
+          let borderBottom: string | undefined;
+          let borderLeft: string | undefined;
+          if (occupyingPlaneId) {
+            const solid = `1px solid ${planeColor?.border ?? "#5f9a3a"}`;
+            const dashed = `1px dashed ${planeColor?.border ?? "#5f9a3a"}`;
+            const sameNeighbor = (r: number, c: number) => planeCellMap.get(`${r}:${c}`) === occupyingPlaneId;
+            borderTop = sameNeighbor(row - 1, col) ? dashed : solid;
+            borderBottom = sameNeighbor(row + 1, col) ? dashed : solid;
+            borderLeft = sameNeighbor(row, col - 1) ? dashed : solid;
+            borderRight = sameNeighbor(row, col + 1) ? dashed : solid;
+          } else {
+            borderTop = borderRight = borderBottom = borderLeft = "1px solid #2c2a27";
+          }
+
           return (
             <button
               key={key}
@@ -126,7 +145,10 @@ export function Board({
                 width: 42,
                 height: 42,
                 background,
-                border: occupyingPlaneId ? `1px solid ${planeColor?.border ?? "#5f9a3a"}` : "1px solid #2c2a27",
+                borderTop,
+                borderRight,
+                borderBottom,
+                borderLeft,
                 cursor: occupyingPlaneId && onPlanesChange ? "grab" : onCellClick ? "pointer" : "default",
                 fontSize: 20,
                 lineHeight: "42px",
