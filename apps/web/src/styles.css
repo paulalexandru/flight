@@ -218,7 +218,8 @@ body {
 }
 
 .game-room__extra-col {
-  flex: 1;
+  flex: 0 0 479px;
+  width: 479px;
 }
 
 .board-grid {
