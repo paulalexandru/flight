@@ -1,0 +1,13 @@
+{
+  "name": "@flight/game-logic",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@flight/types": "*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

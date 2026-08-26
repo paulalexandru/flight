@@ -1,0 +1,19 @@
+{
+  "app": {
+    "title": "Planes"
+  },
+  "lobby": {
+    "findMatch": "Find opponent",
+    "waitingForOpponent": "Waiting for an opponent..."
+  },
+  "game": {
+    "yourTurn": "Your turn",
+    "opponentTurn": "Opponent's turn",
+    "placePlanes": "Place your planes",
+    "hit": "Hit!",
+    "miss": "Miss",
+    "sunk": "Plane sunk!",
+    "youWon": "You won!",
+    "youLost": "You lost."
+  }
+}

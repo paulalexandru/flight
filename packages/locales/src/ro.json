@@ -1,0 +1,19 @@
+{
+  "app": {
+    "title": "Avioane"
+  },
+  "lobby": {
+    "findMatch": "Caută adversar",
+    "waitingForOpponent": "Se așteaptă un adversar..."
+  },
+  "game": {
+    "yourTurn": "E rândul tău",
+    "opponentTurn": "Rândul adversarului",
+    "placePlanes": "Plasează-ți avioanele",
+    "hit": "Lovit!",
+    "miss": "Ratat",
+    "sunk": "Avion doborât!",
+    "youWon": "Ai câștigat!",
+    "youLost": "Ai pierdut."
+  }
+}
