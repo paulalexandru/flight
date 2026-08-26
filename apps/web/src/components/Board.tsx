@@ -88,7 +88,7 @@ export function Board({
           const occupyingPlaneId = planeCellMap.get(key);
           const isPreview = previewKeys.has(key);
           let background = status === "hit" || status === "sunk" ? "#e74c3c" : status === "miss" ? "#95a5a6" : "#3a5a78";
-          if (occupyingPlaneId) background = "#81b64c";
+          if (occupyingPlaneId && !status) background = "#81b64c";
           if (isPreview) background = previewValid ? "#b6e388" : "#e77b7b";
 
           return (

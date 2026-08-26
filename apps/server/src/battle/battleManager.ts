@@ -122,8 +122,8 @@ export function shoot(
   const gameOver = hasPlayerLost(opponentPlanes, battle.shotsByShooter.get(shooterPlayerId) ?? []);
   if (gameOver) {
     battle.winnerId = shooterPlayerId;
-  } else if (result === "miss") {
-    // Rândul trece la adversar doar dacă a fost ratare.
+  } else {
+    // Fiecare jucător are dreptul la o singură mutare pe rând, indiferent de rezultat.
     battle.currentTurnPlayerId = opponentPlayerId;
   }
 

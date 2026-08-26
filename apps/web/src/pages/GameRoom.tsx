@@ -95,11 +95,11 @@ export function GameRoom() {
       const entry = { cell: payload.cell, status: payload.result };
       if (payload.byPlayerId === playerId) {
         setMyShots((prev) => [...prev, entry]);
-        // Rândul trece la adversar doar dacă am ratat.
-        if (payload.result === "miss") setIsMyTurn(false);
+        // Fiecare joacă o singură mutare pe rând, indiferent de rezultat.
+        setIsMyTurn(false);
       } else {
         setIncomingShots((prev) => [...prev, entry]);
-        if (payload.result === "miss") setIsMyTurn(true);
+        setIsMyTurn(true);
       }
     };
 
