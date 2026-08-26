@@ -93,7 +93,6 @@ body {
   width: 240px;
   flex-shrink: 0;
   background: #302e2b;
-  border-left: 1px solid #000;
 }
 
 .work-panel {
