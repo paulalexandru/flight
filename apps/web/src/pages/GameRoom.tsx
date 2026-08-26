@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { socket } from "../socket";
+import { socket, playerId } from "../socket";
 
 interface ActivityEntry {
   key: string;
@@ -35,23 +35,34 @@ export function GameRoom() {
     }) => {
       if (payload.gameId !== gameId) return;
       activityCounter.current += 1;
-      setActivity((prev) => [
-        ...prev,
-        {
-          key: `${payload.at}-${activityCounter.current}`,
-          playerId: payload.playerId,
-          type: payload.type,
-          at: payload.at,
-        },
-      ]);
+      const sequence = activityCounter.current;
+      // Sortăm mereu cronologic (după `at`, apoi ordinea de sosire) astfel încât
+      // mesajele să apară mereu unul sub altul, în ordine, chiar dacă vin foarte rapid.
+      setActivity((prev) =>
+        [
+          ...prev,
+          {
+            key: `${payload.at}-${sequence}`,
+            playerId: payload.playerId,
+            type: payload.type,
+            at: payload.at,
+          },
+        ].sort((a, b) => a.at - b.at || a.key.localeCompare(b.key))
+      );
     };
+
+    // Dacă socket-ul se reconectează (ex: rețea instabilă) cât timp suntem încă
+    // pe pagina sălii, retrimitem room:join ca să reintrăm automat în cameră.
+    const handleReconnect = () => socket.emit("room:join", { gameId });
 
     socket.on("room:state", handleRoomState);
     socket.on("room:activity", handleActivity);
+    socket.io.on("reconnect", handleReconnect);
 
     return () => {
       socket.off("room:state", handleRoomState);
       socket.off("room:activity", handleActivity);
+      socket.io.off("reconnect", handleReconnect);
       socket.emit("room:leave", { gameId });
     };
   }, [gameId]);
@@ -62,7 +73,7 @@ export function GameRoom() {
     <div className="game-room">
       <section className="game-room__main">
         <h2>Sala de joc #{gameId}</h2>
-        <p className="status-text">Id-ul tău de conexiune: {socket.id}</p>
+        <p className="status-text">Id-ul tău: {playerId}</p>
         {opponentJoined ? (
           <span className="badge ready">Adversarul a intrat în sală!</span>
         ) : (
@@ -78,11 +89,11 @@ export function GameRoom() {
             <li
               key={entry.key}
               className={`activity-log__entry ${entry.type === "joined" ? "joined" : "left"}${
-                entry.playerId === socket.id ? " you" : ""
+                entry.playerId === playerId ? " you" : ""
               }`}
             >
               <span className="activity-log__player">
-                {entry.playerId} {entry.playerId === socket.id ? "(tu)" : ""}
+                {entry.playerId} {entry.playerId === playerId ? "(tu)" : ""}
               </span>
               <span className="activity-log__action">
                 {entry.type === "joined" ? "a intrat în sală" : "a ieșit din sală"}

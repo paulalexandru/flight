@@ -29,8 +29,9 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
 // Faza curentă: doar matchmaking + prezență în sală, fără logica jocului încă
 // (game:join/placePlanes/shoot rămân definite în types pentru etapa următoare).
 io.on("connection", (socket) => {
-  registerMatchmakingHandlers(io, socket);
-  registerRoomHandlers(io, socket);
+  const playerId = String(socket.handshake.auth?.playerId ?? socket.id);
+  registerMatchmakingHandlers(io, socket, playerId);
+  registerRoomHandlers(io, socket, playerId);
 });
 
 httpServer.listen(PORT, "0.0.0.0", () => {

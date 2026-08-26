@@ -1,35 +1,37 @@
 import type { Server, Socket } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@flight/types";
 import { setPlayerGame } from "./activeGames";
+import { addPlayerToRoom, removePlayerFromRoom, getRoomRoster } from "./roomRoster";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 function broadcastRoomState(io: AppServer, gameId: string): void {
-  const room = io.sockets.adapter.rooms.get(gameId);
-  const playerIds = room ? Array.from(room) : [];
-  io.to(gameId).emit("room:state", { gameId, playerIds });
+  io.to(gameId).emit("room:state", { gameId, playerIds: getRoomRoster(gameId) });
 }
 
 /**
- * Prezență simplă în sala de joc: cine e conectat momentan la camera `gameId`.
- * Identificatorul jucătorului e, deocamdată, id-ul de socket (fără autentificare reală).
+ * Prezență simplă în sala de joc: cine face parte momentan din camera `gameId`.
+ * Identificatorul jucătorului e un id stabil (persistat client-side în localStorage),
+ * NU socket.id — altfel o reconectare ar apărea ca un jucător complet nou.
  */
-export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
+export function registerRoomHandlers(io: AppServer, socket: AppSocket, playerId: string): void {
   socket.on("room:join", ({ gameId }) => {
     socket.join(gameId);
-    setPlayerGame(socket.id, gameId);
-    io.to(gameId).emit("room:activity", { gameId, playerId: socket.id, type: "joined", at: Date.now() });
+    setPlayerGame(playerId, gameId);
+    addPlayerToRoom(gameId, playerId);
+    io.to(gameId).emit("room:activity", { gameId, playerId, type: "joined", at: Date.now() });
     broadcastRoomState(io, gameId);
   });
 
   // Ieșire voluntară din sală (ex: utilizatorul navighează înapoi la pagina principală).
-  // Nu ștergem legătura socket -> gameId, ca să putem readuce jucătorul înapoi în
+  // Păstrăm playerId -> gameId (activeGames) ca să putem readuce jucătorul înapoi în
   // aceeași sală dacă apasă din nou "Play now" cât timp adversarul e încă acolo.
   socket.on("room:leave", ({ gameId }) => {
     if (!socket.rooms.has(gameId)) return;
     socket.leave(gameId);
-    io.to(gameId).emit("room:activity", { gameId, playerId: socket.id, type: "left", at: Date.now() });
+    removePlayerFromRoom(gameId, playerId);
+    io.to(gameId).emit("room:activity", { gameId, playerId, type: "left", at: Date.now() });
     broadcastRoomState(io, gameId);
   });
 
@@ -37,7 +39,8 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
     const gameRooms = Array.from(socket.rooms).filter((room) => room !== socket.id);
     socket.once("disconnect", () => {
       gameRooms.forEach((gameId) => {
-        io.to(gameId).emit("room:activity", { gameId, playerId: socket.id, type: "left", at: Date.now() });
+        removePlayerFromRoom(gameId, playerId);
+        io.to(gameId).emit("room:activity", { gameId, playerId, type: "left", at: Date.now() });
         broadcastRoomState(io, gameId);
       });
     });

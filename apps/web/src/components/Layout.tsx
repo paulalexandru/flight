@@ -12,7 +12,9 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="app-layout">
       <aside className="app-sidebar">
-        <p className="app-sidebar__logo">Flight</p>
+        <Link to="/" className="app-sidebar__logo">
+          Flight
+        </Link>
         <nav className="app-sidebar__nav">
           {NAV_ITEMS.map((item) => (
             <Link

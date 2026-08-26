@@ -37,11 +37,18 @@ body {
 }
 
 .app-sidebar__logo {
+  display: block;
   font-size: 22px;
   font-weight: 700;
   color: #81b64c;
+  text-decoration: none;
   margin: 0 0 24px 4px;
   letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.app-sidebar__logo:hover {
+  color: #9ccc65;
 }
 
 .app-sidebar__nav {
