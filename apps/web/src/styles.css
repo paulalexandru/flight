@@ -180,7 +180,7 @@ body {
 
 /* Sala de joc: coloana principala (stanga) + coloana ingusta de informatii (dreapta) */
 .game-room {
-  width: 100%;
+  width: fit-content;
   display: flex;
   gap: 40px;
   align-items: flex-start;
