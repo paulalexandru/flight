@@ -25,6 +25,14 @@ export function registerMatchmakingHandlers(io: AppServer, socket: AppSocket): v
     }
   });
 
+  // Anulează căutarea acestui socket dacă acesta părăsește pagina de așteptare
+  // fără să fi fost potrivit încă (ex: navighează înapoi, sau remontări duble în dev).
+  socket.on("matchmaking:cancel", () => {
+    if (waitingSocket?.id === socket.id) {
+      waitingSocket = null;
+    }
+  });
+
   socket.on("disconnect", () => {
     if (waitingSocket?.id === socket.id) {
       waitingSocket = null;

@@ -47,6 +47,7 @@ export interface ClientToServerEvents {
 
   // Matchmaking simplu + prezență în sală (fază curentă, fără logică de joc încă)
   "matchmaking:findMatch": () => void;
+  "matchmaking:cancel": () => void;
   "room:join": (payload: { gameId: string }) => void;
 }
 

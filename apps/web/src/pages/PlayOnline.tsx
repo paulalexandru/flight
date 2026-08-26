@@ -6,9 +6,11 @@ export function PlayOnline() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let matched = false;
     socket.emit("matchmaking:findMatch");
 
     const handleMatched = ({ gameId }: { gameId: string }) => {
+      matched = true;
       navigate(`/game/${gameId}`);
     };
 
@@ -16,6 +18,11 @@ export function PlayOnline() {
 
     return () => {
       socket.off("matchmaking:matched", handleMatched);
+      // Anulăm căutarea dacă nu a fost găsit un adversar (ex: utilizatorul
+      // navighează în altă parte, sau remontarea dublă din React StrictMode).
+      if (!matched) {
+        socket.emit("matchmaking:cancel");
+      }
     };
   }, [navigate]);
 
