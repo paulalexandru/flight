@@ -122,8 +122,9 @@ export function Board({
           let borderLeft: string | undefined;
           if (isPreview) {
             const previewColor = previewValid ? "#2ecc71" : "#e74c3c";
+            const ownColor = previewColorPalette?.border ?? planeColor?.border ?? "#5f9a3a";
             const solid = `2px solid ${previewColor}`;
-            const dashed = `2px dashed ${previewColor}`;
+            const dashed = `1px dashed ${ownColor}`;
             const sameNeighbor = (r: number, c: number) => previewKeys.has(`${r}:${c}`);
             borderTop = sameNeighbor(row - 1, col) ? dashed : solid;
             borderBottom = sameNeighbor(row + 1, col) ? dashed : solid;
