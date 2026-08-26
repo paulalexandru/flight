@@ -94,10 +94,14 @@ export function Board({
               ? PLANE_COLORS[planeColorIndex(occupyingPlaneId)]
               : undefined;
           const isPreview = previewKeys.has(key);
-          let background = status === "hit" || status === "sunk" ? "#e74c3c" : status === "miss" ? "#95a5a6" : "#3a5a78";
-          if (status === "head") background = "#f1c40f";
-          if (occupyingPlaneId && !status) background = planeColor?.background ?? "#81b64c";
+          let background = status === "miss" ? "#3a5a78" : "#3a5a78";
+          if (occupyingPlaneId) background = planeColor?.background ?? "#81b64c";
           if (isPreview) background = previewValid ? "#b6e388" : "#e77b7b";
+
+          let icon: string | null = null;
+          if (status === "miss") icon = "☁️";
+          else if (status === "hit" || status === "sunk") icon = "❌";
+          else if (status === "head") icon = "❌";
 
           return (
             <button
@@ -126,9 +130,34 @@ export function Board({
                 cursor: occupyingPlaneId && onPlanesChange ? "grab" : onCellClick ? "pointer" : "default",
                 fontSize: 20,
                 lineHeight: "42px",
+                position: "relative",
               }}
             >
-              {status === "head" ? "★" : null}
+              {icon && (
+                <span
+                  style={{
+                    color: status === "miss" ? undefined : "#2ecc71",
+                    position: "relative",
+                    display: "inline-block",
+                  }}
+                >
+                  {icon}
+                  {status === "head" && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: -10,
+                        right: -8,
+                        fontSize: 16,
+                        color: "#f1c40f",
+                        textShadow: "0 0 2px #000",
+                      }}
+                    >
+                      ★
+                    </span>
+                  )}
+                </span>
+              )}
             </button>
           );
         })
