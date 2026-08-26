@@ -9,7 +9,7 @@ import type { Cell, PlanePlacement, ShotResult } from "@flight/types";
 interface ActivityEntry {
   key: string;
   playerId: string;
-  type: "joined" | "left";
+  type: "joined" | "left" | "won" | "lost";
   at: number;
 }
 
@@ -56,6 +56,24 @@ export function GameRoom() {
       }
     };
 
+    // Adaugă o intrare cronologică în jurnalul de activitate al sălii (folosit atât pentru
+    // intrări/ieșiri, cât și pentru anunțul de final de joc).
+    const pushActivity = (entry: { playerId: string; type: ActivityEntry["type"]; at: number }) => {
+      activityCounter.current += 1;
+      const sequence = activityCounter.current;
+      setActivity((prev) =>
+        [
+          ...prev,
+          {
+            key: `${entry.at}-${sequence}`,
+            playerId: entry.playerId,
+            type: entry.type,
+            at: entry.at,
+          },
+        ].sort((a, b) => a.at - b.at || a.key.localeCompare(b.key))
+      );
+    };
+
     const handleActivity = (payload: {
       gameId: string;
       playerId: string;
@@ -63,21 +81,7 @@ export function GameRoom() {
       at: number;
     }) => {
       if (payload.gameId !== gameId) return;
-      activityCounter.current += 1;
-      const sequence = activityCounter.current;
-      // Sortăm mereu cronologic (după `at`, apoi ordinea de sosire) astfel încât
-      // mesajele să apară mereu unul sub altul, în ordine, chiar dacă vin foarte rapid.
-      setActivity((prev) =>
-        [
-          ...prev,
-          {
-            key: `${payload.at}-${sequence}`,
-            playerId: payload.playerId,
-            type: payload.type,
-            at: payload.at,
-          },
-        ].sort((a, b) => a.at - b.at || a.key.localeCompare(b.key))
-      );
+      pushActivity(payload);
     };
 
     // Dacă socket-ul se reconectează (ex: rețea instabilă) cât timp suntem încă
@@ -107,6 +111,7 @@ export function GameRoom() {
       if (payload.gameId !== gameId) return;
       setPhase("over");
       setWinner(payload.winnerId);
+      pushActivity({ playerId: payload.winnerId, type: "won", at: Date.now() });
     };
 
     socket.on("room:state", handleRoomState);
@@ -262,7 +267,7 @@ export function GameRoom() {
           {activity.map((entry) => (
             <li
               key={entry.key}
-              className={`activity-log__entry ${entry.type === "joined" ? "joined" : "left"}${
+              className={`activity-log__entry ${entry.type === "joined" || entry.type === "won" ? "joined" : "left"}${
                 entry.playerId === playerId ? " you" : ""
               }`}
             >
@@ -270,7 +275,9 @@ export function GameRoom() {
                 {entry.playerId} {entry.playerId === playerId ? "(tu)" : ""}
               </span>
               <span className="activity-log__action">
-                {entry.type === "joined" ? "a intrat în sală" : "a ieșit din sală"}
+                {entry.type === "joined" && "a intrat în sală"}
+                {entry.type === "left" && "a ieșit din sală"}
+                {entry.type === "won" && "a câștigat jocul! 🏆"}
               </span>
             </li>
           ))}

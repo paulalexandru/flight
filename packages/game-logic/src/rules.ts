@@ -11,4 +11,16 @@ export function hasPlayerLost(planes: PlanePlacement[], shotsAgainstPlayer: Shot
   return planes.every((plane) => getPlaneCells(plane).every((c) => hitKeys.has(cellKey(c))));
 }
 
+/**
+ * Câștigi jocul când ai nimerit capul (`head`) fiecăruia dintre cele 3 avioane ale
+ * adversarului — nu e nevoie să scufunzi tot avionul, doar să găsești capul.
+ */
+export function hasFoundAllPlaneHeads(planes: PlanePlacement[], shotsAgainstOpponent: Shot[]): boolean {
+  const hitKeys = new Set(
+    shotsAgainstOpponent.filter((s) => s.result !== "miss").map((s) => cellKey(s.cell))
+  );
+
+  return planes.every((plane) => hitKeys.has(cellKey(plane.head)));
+}
+
 export const TOTAL_PLANES_PER_PLAYER = 3;

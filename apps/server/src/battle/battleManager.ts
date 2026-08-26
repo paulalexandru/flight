@@ -1,5 +1,5 @@
 import type { Cell, PlanePlacement, Shot } from "@flight/types";
-import { isValidPlanePlacement, getOccupiedCellKeys, resolveShot, hasPlayerLost, TOTAL_PLANES_PER_PLAYER, cellKey } from "@flight/game-logic";
+import { isValidPlanePlacement, getOccupiedCellKeys, resolveShot, hasFoundAllPlaneHeads, cellKey, TOTAL_PLANES_PER_PLAYER } from "@flight/game-logic";
 
 /**
  * Stare de luptă în memorie, per sală (gameId). Nu depinde de MySQL — ținem
@@ -100,6 +100,9 @@ export function shoot(
   if (!battle || !battle.started) {
     return { ok: false, error: "Lupta nu a început încă." };
   }
+  if (battle.winnerId) {
+    return { ok: false, error: "Jocul s-a terminat deja." };
+  }
   if (battle.currentTurnPlayerId !== shooterPlayerId) {
     return { ok: false, error: "Nu este rândul tău." };
   }
@@ -119,7 +122,7 @@ export function shoot(
   const shot: Shot = { cell, result, byPlayerId: shooterPlayerId };
   battle.shotsByShooter.set(shooterPlayerId, [...previousShots, shot]);
 
-  const gameOver = hasPlayerLost(opponentPlanes, battle.shotsByShooter.get(shooterPlayerId) ?? []);
+  const gameOver = hasFoundAllPlaneHeads(opponentPlanes, battle.shotsByShooter.get(shooterPlayerId) ?? []);
   if (gameOver) {
     battle.winnerId = shooterPlayerId;
   } else {
