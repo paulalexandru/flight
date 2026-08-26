@@ -400,6 +400,12 @@ body {
   flex-direction: column;
 }
 
+.game-room__sidebar-heading {
+  margin: 0 0 16px 0;
+  color: #fff;
+  font-size: 18px;
+}
+
 .game-room__sidebar-title {
   margin: 0 0 12px 0;
   color: #b8b6b3;

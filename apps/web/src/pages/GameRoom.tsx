@@ -244,8 +244,6 @@ export function GameRoom() {
   return (
     <div className="game-room">
       <section className="game-room__main">
-        <h2>Sala de joc #{gameId}</h2>
-
         <div className="game-room__work-row">
           <div className="game-room__board-col">
             <div className="board-title">
@@ -344,6 +342,7 @@ export function GameRoom() {
       </section>
 
       <aside className="game-room__sidebar">
+        <h2 className="game-room__sidebar-heading">Sala de joc #{gameId}</h2>
         <h3 className="game-room__sidebar-title">Jucători</h3>
         <ul className="activity-log">
           {activity.length === 0 && <li className="activity-log__empty">Niciun eveniment încă...</li>}
