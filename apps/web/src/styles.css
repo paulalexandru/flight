@@ -505,7 +505,7 @@ body {
 }
 
 /* Ecrane inguste: coloanele din game-room se pun una sub alta (inainte sa nu mai incapa pe orizontala) */
-@media (max-width: 1360px) {
+@media (max-width: 1600px) {
   .game-room {
     flex-direction: column;
     width: 100%;
