@@ -181,14 +181,13 @@ body {
 /* Sala de joc: coloana principala (stanga) + coloana ingusta de informatii (dreapta) */
 .game-room {
   width: 100%;
-  max-width: 1242px;
   display: flex;
-  gap: 20px;
+  gap: 40px;
   align-items: flex-start;
 }
 
 .game-room__main {
-  flex: 1;
+  flex: 0 0 auto;
   text-align: center;
 }
 
