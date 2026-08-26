@@ -20,6 +20,17 @@ function createEmptyTrayPlanes(): { id: string; orientation: "N" | "E" | "S" | "
   }));
 }
 
+/** Fulger suprapus peste avatarul unui jucător care a ieșit din sală, cât timp partida continuă. */
+function DisconnectBolt() {
+  return (
+    <span className="disconnected-badge" title="Adversarul a ieșit din sală">
+      <svg width="14" height="26" viewBox="0 0 14 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 0L0 15h5l-2 11L14 10H8l2-10z" fill="#ffd400" stroke="#8a6d00" strokeWidth="0.5" />
+      </svg>
+    </span>
+  );
+}
+
 export function GameRoom() {
   const { id: gameId } = useParams<{ id: string }>();
   const [playerIds, setPlayerIds] = useState<string[]>([]);
@@ -286,9 +297,7 @@ export function GameRoom() {
                 <span className="player-avatar" aria-hidden="true">
                   👤
                   {!opponentJoined && (
-                    <span className="disconnected-badge" title="Adversarul a ieșit din sală">
-                      ⚡
-                    </span>
+                    <DisconnectBolt />
                   )}
                 </span>
                 <span className="board-title__name-row">
@@ -304,9 +313,7 @@ export function GameRoom() {
                   <span className="player-avatar" aria-hidden="true">
                     👤
                     {!opponentJoined && (
-                      <span className="disconnected-badge" title="Adversarul a ieșit din sală">
-                        ⚡
-                      </span>
+                      <DisconnectBolt />
                     )}
                   </span>
                   <span className="board-title__name-row">
@@ -324,9 +331,7 @@ export function GameRoom() {
                   <span className="player-avatar" aria-hidden="true">
                     👤
                     {!opponentJoined && (
-                      <span className="disconnected-badge" title="Adversarul a ieșit din sală">
-                        ⚡
-                      </span>
+                      <DisconnectBolt />
                     )}
                   </span>
                   <span className="board-title__name-row">Adversarul</span>
