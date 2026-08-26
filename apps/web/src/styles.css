@@ -183,7 +183,7 @@ body {
   width: fit-content;
   display: flex;
   gap: 40px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 .game-room__main {
@@ -390,7 +390,6 @@ body {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  max-height: 480px;
   display: flex;
   flex-direction: column;
 }
@@ -417,6 +416,7 @@ body {
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
+  flex: 1;
 }
 
 .activity-log__empty {
