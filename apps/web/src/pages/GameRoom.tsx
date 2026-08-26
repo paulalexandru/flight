@@ -25,10 +25,6 @@ export function GameRoom() {
   const [playerIds, setPlayerIds] = useState<string[]>([]);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const activityCounter = useRef(0);
-  // Ref sincron cu `playerIds`, ca să putem afla adversarul (pentru mesajul de "a pierdut")
-  // din interiorul unui handler de socket fără să depindem de closure-ul stale al efectului.
-  const playerIdsRef = useRef<string[]>([]);
-  playerIdsRef.current = playerIds;
 
   // Plasarea avioanelor: cele nedescoperite/neplasate stau în "tray" (coloana dreapta),
   // cele plasate au o poziție (head) și apar pe tablă. Momentan doar local (fără sync
@@ -115,12 +111,8 @@ export function GameRoom() {
       if (payload.gameId !== gameId) return;
       setPhase("over");
       setWinner(payload.winnerId);
-      const at = Date.now();
-      pushActivity({ playerId: payload.winnerId, type: "won", at });
-      const loserId = playerIdsRef.current.find((id) => id !== payload.winnerId);
-      if (loserId) {
-        pushActivity({ playerId: loserId, type: "lost", at: at + 1 });
-      }
+      const iWon = payload.winnerId === playerId;
+      pushActivity({ playerId, type: iWon ? "won" : "lost", at: Date.now() });
     };
 
     socket.on("room:state", handleRoomState);
@@ -251,8 +243,8 @@ export function GameRoom() {
             {phase === "battle" && (
               <>
                 <p className="board-title">Tabla adversarului</p>
-                <p className="status-text">{isMyTurn ? "Este rândul tău să tragi." : "Așteaptă mutarea adversarului..."}</p>
                 <Board onCellClick={handleShootOpponent} markedCells={myShots} />
+                <p className="status-text">{isMyTurn ? "Este rândul tău să tragi." : "Așteaptă mutarea adversarului..."}</p>
               </>
             )}
 
@@ -277,15 +269,21 @@ export function GameRoom() {
                 entry.playerId === playerId ? " you" : ""
               }`}
             >
-              <span className="activity-log__player">
-                {entry.playerId} {entry.playerId === playerId ? "(tu)" : ""}
-              </span>
-              <span className="activity-log__action">
-                {entry.type === "joined" && "a intrat în sală"}
-                {entry.type === "left" && "a ieșit din sală"}
-                {entry.type === "won" && "a câștigat jocul! 🏆"}
-                {entry.type === "lost" && "a pierdut jocul."}
-              </span>
+              {entry.type === "won" || entry.type === "lost" ? (
+                <span className="activity-log__action">
+                  {entry.type === "won" ? "Ai câștigat jocul! 🏆" : "Ai pierdut jocul."}
+                </span>
+              ) : (
+                <>
+                  <span className="activity-log__player">
+                    {entry.playerId} {entry.playerId === playerId ? "(tu)" : ""}
+                  </span>
+                  <span className="activity-log__action">
+                    {entry.type === "joined" && "a intrat în sală"}
+                    {entry.type === "left" && "a ieșit din sală"}
+                  </span>
+                </>
+              )}
             </li>
           ))}
         </ul>
