@@ -16,6 +16,8 @@ interface BoardProps {
   onDropNewPlane?: (head: Cell) => void;
   /** Id-ul avionului aflat curent în tragere (din tavă sau de pe tablă), pentru a-i arăta previzualizarea. */
   draggingOrientation?: PlanePlacement["orientation"];
+  /** Id-ul avionului tras dintr-un tavă neplasată încă (pentru culoarea de previzualizare). */
+  draggingPlaneIdFromTray?: string;
   /** Dublu-click pe un avion deja plasat -> îl rotește. */
   onRotatePlane?: (planeId: string) => void;
 }
@@ -27,6 +29,7 @@ export function Board({
   onPlanesChange,
   onDropNewPlane,
   draggingOrientation,
+  draggingPlaneIdFromTray,
   onRotatePlane,
 }: BoardProps) {
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
@@ -95,9 +98,13 @@ export function Board({
               ? PLANE_COLORS[planeColorIndex(occupyingPlaneId)]
               : undefined;
           const isPreview = previewKeys.has(key);
+          const previewPlaneId = draggingPlaneId ?? draggingPlaneIdFromTray;
+          const previewColorPalette = previewPlaneId
+            ? PLANE_COLORS[planeColorIndex(previewPlaneId)]
+            : undefined;
           let background = (row + col) % 2 === 0 ? "#45423c" : "#4d4a42";
           if (occupyingPlaneId) background = planeColor?.background ?? "#81b64c";
-          if (isPreview) background = previewValid ? "#b6e388" : "#e77b7b";
+          if (isPreview) background = previewColorPalette?.background ?? planeColor?.background ?? "#81b64c";
 
           let icon: string | null = null;
           if (status === "hit" || status === "sunk") icon = "❌";
@@ -106,11 +113,23 @@ export function Board({
           // Pentru un avion, marginile spre celule ale ACELUIAȘI avion sunt punctate
           // (delimitare internă a formei), iar marginile spre exterior (afara avionului
           // sau spre alt avion) rămân continue, ca un contur clar al formei.
+          // Când celula face parte din previzualizarea unui avion tras (plasare/mutare),
+          // fundalul își păstrează culoarea proprie a avionului, dar conturul devine
+          // verde (plasare validă) sau roșu (invalidă) în loc de culoarea avionului.
           let borderTop: string | undefined;
           let borderRight: string | undefined;
           let borderBottom: string | undefined;
           let borderLeft: string | undefined;
-          if (occupyingPlaneId) {
+          if (isPreview) {
+            const previewColor = previewValid ? "#2ecc71" : "#e74c3c";
+            const solid = `2px solid ${previewColor}`;
+            const dashed = `2px dashed ${previewColor}`;
+            const sameNeighbor = (r: number, c: number) => previewKeys.has(`${r}:${c}`);
+            borderTop = sameNeighbor(row - 1, col) ? dashed : solid;
+            borderBottom = sameNeighbor(row + 1, col) ? dashed : solid;
+            borderLeft = sameNeighbor(row, col - 1) ? dashed : solid;
+            borderRight = sameNeighbor(row, col + 1) ? dashed : solid;
+          } else if (occupyingPlaneId) {
             const solid = `1px solid ${planeColor?.border ?? "#5f9a3a"}`;
             const dashed = `1px dashed ${planeColor?.border ?? "#5f9a3a"}`;
             const sameNeighbor = (r: number, c: number) => planeCellMap.get(`${r}:${c}`) === occupyingPlaneId;

@@ -256,6 +256,7 @@ export function GameRoom() {
               onPlanesChange={isPlacingPhase ? setPlacedPlanes : undefined}
               onDropNewPlane={isPlacingPhase ? handleDropNewPlane : undefined}
               draggingOrientation={isPlacingPhase ? draggingTrayOrientation : undefined}
+              draggingPlaneIdFromTray={isPlacingPhase ? draggingTrayId ?? undefined : undefined}
               onRotatePlane={isPlacingPhase ? handleRotatePlacedPlane : undefined}
               markedCells={incomingShots}
             />
