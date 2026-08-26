@@ -90,8 +90,8 @@ body {
 
 /* Coloană rezervată pe viitor pentru reclame (goală momentan). */
 .app-ads-col {
-  flex: 1;
-  min-width: 240px;
+  flex: 1 1 240px;
+  min-width: 0;
   background: #302e2b;
 }
 
