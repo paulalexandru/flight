@@ -504,8 +504,8 @@ body {
   }
 }
 
-/* Ecrane inguste: coloanele din game-room se pun una sub alta */
-@media (max-width: 860px) {
+/* Ecrane inguste: coloanele din game-room se pun una sub alta (inainte sa nu mai incapa pe orizontala) */
+@media (max-width: 1360px) {
   .game-room {
     flex-direction: column;
     width: 100%;
@@ -518,11 +518,13 @@ body {
   .game-room__board-col,
   .game-room__extra-col {
     width: 100%;
+    max-width: 452px;
     flex: 1 1 auto;
   }
 
   .game-room__sidebar {
     width: 100%;
+    max-width: 452px;
   }
 }
 
