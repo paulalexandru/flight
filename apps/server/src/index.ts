@@ -6,24 +6,33 @@ import { Server } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@flight/types";
 import { healthRouter } from "./routes/health";
 import { historyRouter } from "./routes/history";
-import { registerGameSocketHandlers } from "./sockets/gameSocket";
+import { registerMatchmakingHandlers } from "./matchmaking/matchmaking";
+import { registerRoomHandlers } from "./rooms/roomPresence";
 
 const PORT = Number(process.env.PORT ?? 4000);
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
+// CLIENT_ORIGIN acceptă o listă separată prin virgulă (ex: pentru acces din rețea locală).
+const CLIENT_ORIGINS = (process.env.CLIENT_ORIGIN ?? "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim());
 
 const app = express();
-app.use(cors({ origin: CLIENT_ORIGIN }));
+app.use(cors({ origin: CLIENT_ORIGINS }));
 app.use(express.json());
 app.use("/health", healthRouter);
 app.use("/api", historyRouter);
 
 const httpServer = createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
-  cors: { origin: CLIENT_ORIGIN },
+  cors: { origin: CLIENT_ORIGINS },
 });
 
-registerGameSocketHandlers(io);
+// Faza curentă: doar matchmaking + prezență în sală, fără logica jocului încă
+// (game:join/placePlanes/shoot rămân definite în types pentru etapa următoare).
+io.on("connection", (socket) => {
+  registerMatchmakingHandlers(io, socket);
+  registerRoomHandlers(io, socket);
+});
 
-httpServer.listen(PORT, () => {
-  console.log(`Flight server listening on http://localhost:${PORT}`);
+httpServer.listen(PORT, "0.0.0.0", () => {
+  console.log(`Flight server listening on http://0.0.0.0:${PORT}`);
 });

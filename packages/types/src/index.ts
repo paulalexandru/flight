@@ -44,9 +44,16 @@ export interface ClientToServerEvents {
   "game:placePlanes": (payload: { gameId: string; planes: PlanePlacement[] }) => void;
   "game:shoot": (payload: { gameId: string; cell: Cell }) => void;
   "game:resign": (payload: { gameId: string }) => void;
+
+  // Matchmaking simplu + prezență în sală (fază curentă, fără logică de joc încă)
+  "matchmaking:findMatch": () => void;
+  "room:join": (payload: { gameId: string }) => void;
 }
 
 export interface ServerToClientEvents {
+  "matchmaking:matched": (payload: { gameId: string }) => void;
+  "room:state": (payload: { gameId: string; playerIds: string[] }) => void;
+
   "game:state": (state: GameState) => void;
   "game:error": (payload: { message: string }) => void;
 }
