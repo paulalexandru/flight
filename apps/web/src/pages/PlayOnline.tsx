@@ -20,8 +20,9 @@ export function PlayOnline() {
   }, [navigate]);
 
   return (
-    <div className="page page-play-online">
-      <p>Se așteaptă un adversar...</p>
+    <div className="work-panel page-play-online">
+      <h2>Se caută adversar...</h2>
+      <span className="badge waiting">În așteptare</span>
     </div>
   );
 }

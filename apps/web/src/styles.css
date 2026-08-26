@@ -1,0 +1,163 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #302e2b;
+  color: #e5e5e5;
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Coloana din stânga, pe post de meniu - fundal închis, distinct de zona de lucru */
+.app-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #1e1c1a;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-right: 1px solid #000;
+}
+
+.app-sidebar__logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #81b64c;
+  margin: 0 0 24px 4px;
+  letter-spacing: 0.5px;
+}
+
+.app-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-sidebar__link {
+  color: #b8b6b3;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar__link:hover {
+  background: #302e2b;
+  color: #fff;
+}
+
+.app-sidebar__link.active {
+  background: #3d3a36;
+  color: #81b64c;
+}
+
+/* Zona centrala de lucru - fundal mai deschis, ca sa se diferentieze clar de meniu */
+.app-content {
+  flex: 1;
+  background: #302e2b;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 24px;
+}
+
+.work-panel {
+  width: 100%;
+  max-width: 640px;
+  background: #262522;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.work-panel h1,
+.work-panel h2 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.play-now-button,
+.primary-button {
+  background: #81b64c;
+  color: #1e1c1a;
+  border: none;
+  padding: 14px 32px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.play-now-button:hover,
+.primary-button:hover {
+  background: #9ccc65;
+}
+
+.status-text {
+  color: #b8b6b3;
+  font-size: 16px;
+  margin-top: 16px;
+}
+
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.player-list li {
+  background: #302e2b;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #b8b6b3;
+}
+
+.player-list li.you {
+  border: 1px solid #81b64c;
+  color: #fff;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.badge.waiting {
+  background: #4a3f1a;
+  color: #e0c34d;
+}
+
+.badge.ready {
+  background: #1f3d24;
+  color: #81b64c;
+}

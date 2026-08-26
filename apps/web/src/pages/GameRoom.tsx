@@ -27,21 +27,20 @@ export function GameRoom() {
   const opponentJoined = playerIds.length > 1;
 
   return (
-    <div className="page page-game-room">
-      <p>Sala de joc #{gameId}</p>
-      <p>Id-ul tău de conexiune: {socket.id}</p>
-      <p>Jucători conectați: {playerIds.length}</p>
-      <ul>
+    <div className="work-panel page-game-room">
+      <h2>Sala de joc #{gameId}</h2>
+      <p className="status-text">Id-ul tău de conexiune: {socket.id}</p>
+      <ul className="player-list">
         {playerIds.map((id) => (
-          <li key={id}>
+          <li key={id} className={id === socket.id ? "you" : ""}>
             {id} {id === socket.id ? "(tu)" : ""}
           </li>
         ))}
       </ul>
       {opponentJoined ? (
-        <p>Adversarul a intrat în sală!</p>
+        <span className="badge ready">Adversarul a intrat în sală!</span>
       ) : (
-        <p>Se așteaptă ca adversarul să intre în sală...</p>
+        <span className="badge waiting">Se așteaptă adversarul...</span>
       )}
     </div>
   );
