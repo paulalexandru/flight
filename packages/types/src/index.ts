@@ -50,6 +50,10 @@ export interface ClientToServerEvents {
   "matchmaking:cancel": () => void;
   "room:join": (payload: { gameId: string }) => void;
   "room:leave": (payload: { gameId: string }) => void;
+
+  // Plasare avioane + luptă propriu-zisă (în memorie, per sală)
+  "placement:ready": (payload: { gameId: string; planes: PlanePlacement[] }) => void;
+  "battle:shoot": (payload: { gameId: string; cell: Cell }) => void;
 }
 
 export interface ServerToClientEvents {
@@ -59,4 +63,11 @@ export interface ServerToClientEvents {
 
   "game:state": (state: GameState) => void;
   "game:error": (payload: { message: string }) => void;
+
+  // Confirmă cine e gata (a plasat avioanele) în sala curentă.
+  "placement:status": (payload: { gameId: string; readyPlayerIds: string[] }) => void;
+  // Ambii jucători sunt gata -> începe lupta; se alege aleator cine mută primul.
+  "battle:started": (payload: { gameId: string; firstPlayerId: string }) => void;
+  "battle:shot": (payload: { gameId: string; byPlayerId: string; cell: Cell; result: ShotResult }) => void;
+  "battle:over": (payload: { gameId: string; winnerId: string }) => void;
 }

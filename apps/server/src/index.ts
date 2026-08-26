@@ -8,6 +8,7 @@ import { healthRouter } from "./routes/health";
 import { historyRouter } from "./routes/history";
 import { registerMatchmakingHandlers } from "./matchmaking/matchmaking";
 import { registerRoomHandlers } from "./rooms/roomPresence";
+import { registerBattleHandlers } from "./battle/battleSocket";
 
 const PORT = Number(process.env.PORT ?? 4000);
 // CLIENT_ORIGIN acceptă o listă separată prin virgulă (ex: pentru acces din rețea locală).
@@ -32,6 +33,7 @@ io.on("connection", (socket) => {
   const playerId = String(socket.handshake.auth?.playerId ?? socket.id);
   registerMatchmakingHandlers(io, socket, playerId);
   registerRoomHandlers(io, socket, playerId);
+  registerBattleHandlers(io, socket, playerId);
 });
 
 httpServer.listen(PORT, "0.0.0.0", () => {

@@ -4,7 +4,7 @@ import { socket, playerId } from "../socket";
 import { Board } from "../components/Board";
 import { PlaneTray, NEXT_ORIENTATION } from "../components/PlaneTray";
 import { TOTAL_PLANES_PER_PLAYER, isValidPlanePlacement, getOccupiedCellKeys } from "@flight/game-logic";
-import type { PlanePlacement } from "@flight/types";
+import type { Cell, PlanePlacement, ShotResult } from "@flight/types";
 
 interface ActivityEntry {
   key: string;
@@ -32,6 +32,16 @@ export function GameRoom() {
   const [trayPlanes, setTrayPlanes] = useState(createEmptyTrayPlanes);
   const [placedPlanes, setPlacedPlanes] = useState<PlanePlacement[]>([]);
   const [draggingTrayId, setDraggingTrayId] = useState<string | null>(null);
+
+  // Faza jocului: "placing" -> plasare avioane, "waiting" -> eu am confirmat, aștept adversarul,
+  // "battle" -> lupta a început, "over" -> jocul s-a terminat.
+  const [phase, setPhase] = useState<"placing" | "waiting" | "battle" | "over">("placing");
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  // Loviturile date DE mine (asupra tablei adversarului) și cele primite (asupra mea).
+  const [myShots, setMyShots] = useState<{ cell: Cell; status: ShotResult }[]>([]);
+  const [incomingShots, setIncomingShots] = useState<{ cell: Cell; status: ShotResult }[]>([]);
+  const [winner, setWinner] = useState<string | null>(null);
+
 
 
   useEffect(() => {
@@ -74,14 +84,45 @@ export function GameRoom() {
     // pe pagina sălii, retrimitem room:join ca să reintrăm automat în cameră.
     const handleReconnect = () => socket.emit("room:join", { gameId });
 
+    const handleBattleStarted = (payload: { gameId: string; firstPlayerId: string }) => {
+      if (payload.gameId !== gameId) return;
+      setPhase("battle");
+      setIsMyTurn(payload.firstPlayerId === playerId);
+    };
+
+    const handleBattleShot = (payload: { gameId: string; byPlayerId: string; cell: Cell; result: ShotResult }) => {
+      if (payload.gameId !== gameId) return;
+      const entry = { cell: payload.cell, status: payload.result };
+      if (payload.byPlayerId === playerId) {
+        setMyShots((prev) => [...prev, entry]);
+        // Rândul trece la adversar doar dacă am ratat.
+        if (payload.result === "miss") setIsMyTurn(false);
+      } else {
+        setIncomingShots((prev) => [...prev, entry]);
+        if (payload.result === "miss") setIsMyTurn(true);
+      }
+    };
+
+    const handleBattleOver = (payload: { gameId: string; winnerId: string }) => {
+      if (payload.gameId !== gameId) return;
+      setPhase("over");
+      setWinner(payload.winnerId);
+    };
+
     socket.on("room:state", handleRoomState);
     socket.on("room:activity", handleActivity);
     socket.io.on("reconnect", handleReconnect);
+    socket.on("battle:started", handleBattleStarted);
+    socket.on("battle:shot", handleBattleShot);
+    socket.on("battle:over", handleBattleOver);
 
     return () => {
       socket.off("room:state", handleRoomState);
       socket.off("room:activity", handleActivity);
       socket.io.off("reconnect", handleReconnect);
+      socket.off("battle:started", handleBattleStarted);
+      socket.off("battle:shot", handleBattleShot);
+      socket.off("battle:over", handleBattleOver);
       socket.emit("room:leave", { gameId });
     };
   }, [gameId]);
@@ -125,6 +166,20 @@ export function GameRoom() {
     ? trayPlanes.find((p) => p.id === draggingTrayId)?.orientation
     : undefined;
 
+  const handleConfirmPlacement = () => {
+    if (!gameId || trayPlanes.length > 0) return;
+    socket.emit("placement:ready", { gameId, planes: placedPlanes });
+    setPhase("waiting");
+  };
+
+  const handleShootOpponent = (cell: Cell) => {
+    if (!gameId || phase !== "battle" || !isMyTurn) return;
+    if (myShots.some((s) => s.cell.row === cell.row && s.cell.col === cell.col)) return;
+    socket.emit("battle:shoot", { gameId, cell });
+  };
+
+  const isPlacingPhase = phase === "placing";
+
   return (
     <div className="game-room">
       <section className="game-room__main">
@@ -138,25 +193,62 @@ export function GameRoom() {
 
         <div className="game-room__work-row">
           <div className="game-room__board-col">
+            <p className="board-title">Tabla ta</p>
             <Board
               planes={placedPlanes}
-              onPlanesChange={setPlacedPlanes}
-              onDropNewPlane={handleDropNewPlane}
-              draggingOrientation={draggingTrayOrientation}
-              onRotatePlane={handleRotatePlacedPlane}
+              onPlanesChange={isPlacingPhase ? setPlacedPlanes : undefined}
+              onDropNewPlane={isPlacingPhase ? handleDropNewPlane : undefined}
+              draggingOrientation={isPlacingPhase ? draggingTrayOrientation : undefined}
+              onRotatePlane={isPlacingPhase ? handleRotatePlacedPlane : undefined}
+              markedCells={incomingShots}
             />
           </div>
           <div className="game-room__extra-col">
-            <PlaneTray
-              planes={trayPlanes}
-              onDragStart={setDraggingTrayId}
-              onRotate={handleRotateTrayPlane}
-            />
-            {placedPlanes.length > 0 && (
-              <div className="plane-tray placed-planes-hint">
+            {isPlacingPhase && (
+              <>
+                <PlaneTray
+                  planes={trayPlanes}
+                  onDragStart={setDraggingTrayId}
+                  onRotate={handleRotateTrayPlane}
+                />
+                {placedPlanes.length > 0 && (
+                  <div className="plane-tray placed-planes-hint">
+                    <p className="plane-tray__empty">
+                      Trage un avion plasat pentru a-l muta, sau dă dublu-click pentru a-l roti.
+                    </p>
+                  </div>
+                )}
+                <button
+                  className="ready-button"
+                  disabled={trayPlanes.length > 0}
+                  onClick={handleConfirmPlacement}
+                >
+                  Gata
+                </button>
+              </>
+            )}
+
+            {phase === "waiting" && (
+              <div className="plane-tray waiting-panel">
+                <p className="plane-tray__empty">Se așteaptă după celălalt jucător...</p>
+              </div>
+            )}
+
+            {phase === "battle" && (
+              <>
+                <p className="board-title">Tabla adversarului</p>
+                <p className="status-text">{isMyTurn ? "Este rândul tău să tragi." : "Așteaptă mutarea adversarului..."}</p>
+                <Board onCellClick={handleShootOpponent} markedCells={myShots} />
+              </>
+            )}
+
+            {phase === "over" && (
+              <div className="plane-tray waiting-panel">
                 <p className="plane-tray__empty">
-                  Trage un avion plasat pentru a-l muta, sau dă dublu-click pentru a-l roti.
+                  {winner === playerId ? "Ai câștigat! 🎉" : "Ai pierdut."}
                 </p>
+                <p className="board-title">Tabla adversarului</p>
+                <Board markedCells={myShots} />
               </div>
             )}
           </div>
