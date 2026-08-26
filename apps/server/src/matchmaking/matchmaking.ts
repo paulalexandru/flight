@@ -2,6 +2,7 @@ import type { Server, Socket } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@flight/types";
 import { getPlayerGame } from "../rooms/activeGames";
 import { getRoomRoster } from "../rooms/roomRoster";
+import { isBattleOver } from "../battle/battleManager";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -18,8 +19,10 @@ export function registerMatchmakingHandlers(io: AppServer, socket: AppSocket, pl
   socket.on("matchmaking:findMatch", () => {
     // Dacă acest jucător avea deja o sală activă (a ieșit fără să termine jocul)
     // și adversarul e încă acolo, îl ducem direct înapoi, fără matchmaking nou.
+    // Excepție: dacă partida s-a terminat deja (are un câștigător), nu îl mai
+    // readucem în ea — pornește o căutare nouă, ca la o partidă complet nouă.
     const previousGameId = getPlayerGame(playerId);
-    if (previousGameId) {
+    if (previousGameId && !isBattleOver(previousGameId)) {
       const roster = getRoomRoster(previousGameId).filter((id) => id !== playerId);
       if (roster.length > 0) {
         socket.emit("matchmaking:matched", { gameId: previousGameId });

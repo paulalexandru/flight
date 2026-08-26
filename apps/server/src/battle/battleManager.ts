@@ -88,6 +88,10 @@ export function isBattleStarted(gameId: string): boolean {
   return battles.get(gameId)?.started ?? false;
 }
 
+export function isBattleOver(gameId: string): boolean {
+  return battles.get(gameId)?.winnerId != null;
+}
+
 export function shoot(
   gameId: string,
   shooterPlayerId: string,
