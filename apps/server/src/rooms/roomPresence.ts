@@ -17,13 +17,17 @@ function broadcastRoomState(io: AppServer, gameId: string): void {
 export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
   socket.on("room:join", ({ gameId }) => {
     socket.join(gameId);
+    io.to(gameId).emit("room:activity", { gameId, playerId: socket.id, type: "joined", at: Date.now() });
     broadcastRoomState(io, gameId);
   });
 
   socket.on("disconnecting", () => {
     const gameRooms = Array.from(socket.rooms).filter((room) => room !== socket.id);
     socket.once("disconnect", () => {
-      gameRooms.forEach((gameId) => broadcastRoomState(io, gameId));
+      gameRooms.forEach((gameId) => {
+        io.to(gameId).emit("room:activity", { gameId, playerId: socket.id, type: "left", at: Date.now() });
+        broadcastRoomState(io, gameId);
+      });
     });
   });
 }

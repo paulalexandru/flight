@@ -53,6 +53,7 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   "matchmaking:matched": (payload: { gameId: string }) => void;
   "room:state": (payload: { gameId: string; playerIds: string[] }) => void;
+  "room:activity": (payload: { gameId: string; playerId: string; type: "joined" | "left"; at: number }) => void;
 
   "game:state": (state: GameState) => void;
   "game:error": (payload: { message: string }) => void;

@@ -161,3 +161,95 @@ body {
   background: #1f3d24;
   color: #81b64c;
 }
+
+/* Sala de joc: coloana principala (stanga) + coloana ingusta de informatii (dreapta) */
+.game-room {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.game-room__main {
+  flex: 1;
+  background: #262522;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.game-room__main h2 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.game-room__sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: #201f1c;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-room__sidebar-title {
+  margin: 0 0 12px 0;
+  color: #b8b6b3;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.activity-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.activity-log__empty {
+  color: #6b6864;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.activity-log__entry {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #2b2a27;
+  border-left: 3px solid transparent;
+  font-size: 13px;
+}
+
+.activity-log__entry.joined {
+  border-left-color: #81b64c;
+}
+
+.activity-log__entry.left {
+  border-left-color: #c25151;
+}
+
+.activity-log__entry.you .activity-log__player {
+  color: #fff;
+  font-weight: 600;
+}
+
+.activity-log__player {
+  font-family: monospace;
+  color: #d0cec9;
+}
+
+.activity-log__action {
+  color: #8a8783;
+}
