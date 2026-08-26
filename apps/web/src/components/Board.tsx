@@ -14,7 +14,7 @@ export function Board({ onCellClick, markedCells = [] }: BoardProps) {
     markedCells.find((m) => m.cell.row === row && m.cell.col === col)?.status;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${BOARD_SIZE}, 32px)`, gap: 2 }}>
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${BOARD_SIZE}, 42px)`, gap: 3 }}>
       {rows.map((row) =>
         cols.map((col) => {
           const status = statusFor(row, col);
@@ -23,8 +23,8 @@ export function Board({ onCellClick, markedCells = [] }: BoardProps) {
               key={`${row}-${col}`}
               onClick={() => onCellClick?.({ row, col })}
               style={{
-                width: 32,
-                height: 32,
+                width: 42,
+                height: 42,
                 background: status === "hit" || status === "sunk" ? "#e74c3c" : status === "miss" ? "#95a5a6" : "#3498db",
               }}
             />
