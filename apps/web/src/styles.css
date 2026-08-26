@@ -80,12 +80,12 @@ body {
 /* Zona centrala de lucru - fundal mai deschis, ca sa se diferentieze clar de meniu */
 .app-content {
   flex: 1;
+  min-width: 0;
   background: #302e2b;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
   padding: 48px 24px 48px 100px;
-  flex: 1;
 }
 
 /* Coloană rezervată pe viitor pentru reclame (goală momentan). */
