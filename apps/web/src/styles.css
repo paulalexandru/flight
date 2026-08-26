@@ -172,7 +172,7 @@ body {
 /* Sala de joc: coloana principala (stanga) + coloana ingusta de informatii (dreapta) */
 .game-room {
   width: 100%;
-  max-width: 900px;
+  max-width: 1080px;
   display: flex;
   gap: 20px;
   align-items: flex-start;
@@ -190,6 +190,28 @@ body {
 .game-room__main h2 {
   margin-top: 0;
   color: #fff;
+}
+
+/* Rand de lucru sub textul de status: tabla de joc (stanga) + coloana libera (dreapta), egale */
+.game-room__work-row {
+  display: flex;
+  gap: 20px;
+  margin-top: 32px;
+  text-align: left;
+}
+
+.game-room__board-col,
+.game-room__extra-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.game-room__extra-col {
+  background: #201f1c;
+  border-radius: 8px;
+  min-height: 340px;
 }
 
 .game-room__sidebar {

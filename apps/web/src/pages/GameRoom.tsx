@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { socket, playerId } from "../socket";
+import { Board } from "../components/Board";
 
 interface ActivityEntry {
   key: string;
@@ -79,6 +80,13 @@ export function GameRoom() {
         ) : (
           <span className="badge waiting">Se așteaptă adversarul...</span>
         )}
+
+        <div className="game-room__work-row">
+          <div className="game-room__board-col">
+            <Board />
+          </div>
+          <div className="game-room__extra-col" />
+        </div>
       </section>
 
       <aside className="game-room__sidebar">
