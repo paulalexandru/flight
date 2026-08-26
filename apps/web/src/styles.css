@@ -85,7 +85,7 @@ body {
   justify-content: flex-start;
   align-items: flex-start;
   padding: 48px 24px 48px 100px;
-  max-width: 1080px;
+  flex: 0 1 auto;
 }
 
 /* Coloană rezervată pe viitor pentru reclame (goală momentan). */
