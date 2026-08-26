@@ -70,4 +70,16 @@ export interface ServerToClientEvents {
   "battle:started": (payload: { gameId: string; firstPlayerId: string }) => void;
   "battle:shot": (payload: { gameId: string; byPlayerId: string; cell: Cell; result: ShotResult }) => void;
   "battle:over": (payload: { gameId: string; winnerId: string }) => void;
+  // Trimis jucătorului care (re)intră într-o sală, ca să-și poată reconstrui local
+  // starea jocului aflat deja în desfășurare (dacă a ieșit și a revenit, de exemplu).
+  "battle:sync": (payload: {
+    gameId: string;
+    myPlanes: PlanePlacement[] | null;
+    readyPlayerIds: string[];
+    started: boolean;
+    isMyTurn: boolean;
+    winnerId: string | null;
+    myShots: Shot[];
+    incomingShots: Shot[];
+  }) => void;
 }

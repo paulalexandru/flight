@@ -115,12 +115,55 @@ export function GameRoom() {
       pushActivity({ playerId, type: iWon ? "won" : "lost", at: Date.now() });
     };
 
+    // La (re)intrarea în sală, serverul ne retrimite starea completă a luptei
+    // dacă exista deja una în desfășurare (ex: am ieșit fără să termin jocul
+    // și am revenit) — reconstruim local avioanele, loviturile, rândul curent.
+    const handleBattleSync = (payload: {
+      gameId: string;
+      myPlanes: PlanePlacement[] | null;
+      readyPlayerIds: string[];
+      started: boolean;
+      isMyTurn: boolean;
+      winnerId: string | null;
+      myShots: { cell: Cell; result: ShotResult }[];
+      incomingShots: { cell: Cell; result: ShotResult }[];
+    }) => {
+      if (payload.gameId !== gameId) return;
+
+      if (payload.winnerId) {
+        if (payload.myPlanes) setPlacedPlanes(payload.myPlanes);
+        setTrayPlanes([]);
+        setMyShots(payload.myShots.map((s) => ({ cell: s.cell, status: s.result })));
+        setIncomingShots(payload.incomingShots.map((s) => ({ cell: s.cell, status: s.result })));
+        setWinner(payload.winnerId);
+        setPhase("over");
+        return;
+      }
+
+      if (payload.started) {
+        if (payload.myPlanes) setPlacedPlanes(payload.myPlanes);
+        setTrayPlanes([]);
+        setMyShots(payload.myShots.map((s) => ({ cell: s.cell, status: s.result })));
+        setIncomingShots(payload.incomingShots.map((s) => ({ cell: s.cell, status: s.result })));
+        setIsMyTurn(payload.isMyTurn);
+        setPhase("battle");
+        return;
+      }
+
+      if (payload.myPlanes && payload.readyPlayerIds.includes(playerId)) {
+        setPlacedPlanes(payload.myPlanes);
+        setTrayPlanes([]);
+        setPhase("waiting");
+      }
+    };
+
     socket.on("room:state", handleRoomState);
     socket.on("room:activity", handleActivity);
     socket.io.on("reconnect", handleReconnect);
     socket.on("battle:started", handleBattleStarted);
     socket.on("battle:shot", handleBattleShot);
     socket.on("battle:over", handleBattleOver);
+    socket.on("battle:sync", handleBattleSync);
 
     return () => {
       socket.off("room:state", handleRoomState);
@@ -129,6 +172,7 @@ export function GameRoom() {
       socket.off("battle:started", handleBattleStarted);
       socket.off("battle:shot", handleBattleShot);
       socket.off("battle:over", handleBattleOver);
+      socket.off("battle:sync", handleBattleSync);
       socket.emit("room:leave", { gameId });
     };
   }, [gameId]);

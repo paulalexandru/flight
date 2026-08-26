@@ -140,3 +140,43 @@ export function shoot(
 export function getWinnerId(gameId: string): string | null {
   return battles.get(gameId)?.winnerId ?? null;
 }
+
+/**
+ * Instantaneu al stării de luptă pentru un jucător anume, folosit pentru a-l
+ * "resincroniza" dacă a ieșit din sală (fără să termine jocul) și a reintrat.
+ */
+export function getBattleSyncFor(
+  gameId: string,
+  playerId: string,
+  opponentId: string | null
+): {
+  myPlanes: PlanePlacement[] | null;
+  readyPlayerIds: string[];
+  started: boolean;
+  isMyTurn: boolean;
+  winnerId: string | null;
+  myShots: Shot[];
+  incomingShots: Shot[];
+} {
+  const battle = battles.get(gameId);
+  if (!battle) {
+    return {
+      myPlanes: null,
+      readyPlayerIds: [],
+      started: false,
+      isMyTurn: false,
+      winnerId: null,
+      myShots: [],
+      incomingShots: [],
+    };
+  }
+  return {
+    myPlanes: battle.planesByPlayer.get(playerId) ?? null,
+    readyPlayerIds: Array.from(battle.readyPlayerIds),
+    started: battle.started,
+    isMyTurn: battle.currentTurnPlayerId === playerId,
+    winnerId: battle.winnerId,
+    myShots: battle.shotsByShooter.get(playerId) ?? [],
+    incomingShots: opponentId ? battle.shotsByShooter.get(opponentId) ?? [] : [],
+  };
+}

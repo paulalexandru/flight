@@ -2,6 +2,7 @@ import type { Server, Socket } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@flight/types";
 import { setPlayerGame } from "./activeGames";
 import { addPlayerToRoom, removePlayerFromRoom, getRoomRoster } from "./roomRoster";
+import { getBattleSyncFor } from "../battle/battleManager";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -22,6 +23,13 @@ export function registerRoomHandlers(io: AppServer, socket: AppSocket, playerId:
     addPlayerToRoom(gameId, playerId);
     io.to(gameId).emit("room:activity", { gameId, playerId, type: "joined", at: Date.now() });
     broadcastRoomState(io, gameId);
+
+    // Dacă acest jucător avea deja o partidă în desfășurare în această sală
+    // (ex: a ieșit fără să termine jocul și a revenit), îi retrimitem starea
+    // completă ca să-și poată reconstrui local avioanele/loviturile/rândul.
+    const opponentId = getRoomRoster(gameId).find((id) => id !== playerId) ?? null;
+    const sync = getBattleSyncFor(gameId, playerId, opponentId);
+    socket.emit("battle:sync", { gameId, ...sync });
   });
 
   // Ieșire voluntară din sală (ex: utilizatorul navighează înapoi la pagina principală).
