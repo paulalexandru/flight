@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { socket, playerId } from "../socket";
 import { Board } from "../components/Board";
+import { PlaneTray, NEXT_ORIENTATION } from "../components/PlaneTray";
+import { TOTAL_PLANES_PER_PLAYER, isValidPlanePlacement, getOccupiedCellKeys } from "@flight/game-logic";
+import type { PlanePlacement } from "@flight/types";
 
 interface ActivityEntry {
   key: string;
@@ -10,11 +13,26 @@ interface ActivityEntry {
   at: number;
 }
 
+function createEmptyTrayPlanes(): { id: string; orientation: "N" | "E" | "S" | "W" }[] {
+  return Array.from({ length: TOTAL_PLANES_PER_PLAYER }, (_, i) => ({
+    id: `tray-${i}`,
+    orientation: "N" as const,
+  }));
+}
+
 export function GameRoom() {
   const { id: gameId } = useParams<{ id: string }>();
   const [playerIds, setPlayerIds] = useState<string[]>([]);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const activityCounter = useRef(0);
+
+  // Plasarea avioanelor: cele nedescoperite/neplasate stau în "tray" (coloana dreapta),
+  // cele plasate au o poziție (head) și apar pe tablă. Momentan doar local (fără sync
+  // cu serverul) — pregătim UI-ul de plasare înainte să adăugăm faza de joc propriu-zisă.
+  const [trayPlanes, setTrayPlanes] = useState(createEmptyTrayPlanes);
+  const [placedPlanes, setPlacedPlanes] = useState<PlanePlacement[]>([]);
+  const [draggingTrayId, setDraggingTrayId] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!gameId) return;
@@ -70,6 +88,43 @@ export function GameRoom() {
 
   const opponentJoined = playerIds.length > 1;
 
+  // Un avion nou din tray e plasat pe tablă la poziția pe care s-a dat drop, dacă e validă
+  // (nu iese de pe tablă și nu se suprapune cu un avion deja plasat).
+  const handleDropNewPlane = (head: { row: number; col: number }) => {
+    if (!draggingTrayId) return;
+    const trayPlane = trayPlanes.find((p) => p.id === draggingTrayId);
+    if (!trayPlane) return;
+    const candidate: PlanePlacement = { id: trayPlane.id, head, orientation: trayPlane.orientation };
+    const occupied = getOccupiedCellKeys(placedPlanes);
+    if (!isValidPlanePlacement(candidate, occupied)) return;
+    setPlacedPlanes((prev) => [...prev, candidate]);
+    setTrayPlanes((prev) => prev.filter((p) => p.id !== draggingTrayId));
+    setDraggingTrayId(null);
+  };
+
+  // Rotește un avion, fie că e încă în tray (neplasat), fie deja pe tablă — în ambele
+  // cazuri, dacă e deja plasat, rotirea e respinsă când noua orientare nu (mai) e validă.
+  const handleRotateTrayPlane = (planeId: string) => {
+    setTrayPlanes((prev) =>
+      prev.map((p) => (p.id === planeId ? { ...p, orientation: NEXT_ORIENTATION[p.orientation] } : p))
+    );
+  };
+
+  const handleRotatePlacedPlane = (planeId: string) => {
+    setPlacedPlanes((prev) => {
+      const plane = prev.find((p) => p.id === planeId);
+      if (!plane) return prev;
+      const candidate: PlanePlacement = { ...plane, orientation: NEXT_ORIENTATION[plane.orientation] };
+      const occupied = getOccupiedCellKeys(prev, planeId);
+      if (!isValidPlanePlacement(candidate, occupied)) return prev;
+      return prev.map((p) => (p.id === planeId ? candidate : p));
+    });
+  };
+
+  const draggingTrayOrientation = draggingTrayId
+    ? trayPlanes.find((p) => p.id === draggingTrayId)?.orientation
+    : undefined;
+
   return (
     <div className="game-room">
       <section className="game-room__main">
@@ -83,9 +138,28 @@ export function GameRoom() {
 
         <div className="game-room__work-row">
           <div className="game-room__board-col">
-            <Board />
+            <Board
+              planes={placedPlanes}
+              onPlanesChange={setPlacedPlanes}
+              onDropNewPlane={handleDropNewPlane}
+              draggingOrientation={draggingTrayOrientation}
+              onRotatePlane={handleRotatePlacedPlane}
+            />
           </div>
-          <div className="game-room__extra-col" />
+          <div className="game-room__extra-col">
+            <PlaneTray
+              planes={trayPlanes}
+              onDragStart={setDraggingTrayId}
+              onRotate={handleRotateTrayPlane}
+            />
+            {placedPlanes.length > 0 && (
+              <div className="plane-tray placed-planes-hint">
+                <p className="plane-tray__empty">
+                  Trage un avion plasat pentru a-l muta, sau dă dublu-click pentru a-l roti.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

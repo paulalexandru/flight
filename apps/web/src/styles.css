@@ -212,7 +212,64 @@ body {
   background: #201f1c;
   border-radius: 8px;
   min-height: 340px;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 16px;
 }
+
+.plane-tray {
+  color: #e5e5e5;
+}
+
+.plane-tray__title {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #b8b6b3;
+}
+
+.plane-tray__empty {
+  color: #8a8783;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.plane-tray__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.plane-tray__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #2b2a27;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: grab;
+}
+
+.plane-tray__rotate {
+  background: #3d3a36;
+  color: #e5e5e5;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.plane-tray__rotate:hover {
+  background: #4a4642;
+}
+
+.placed-planes-hint {
+  margin-top: 16px;
+}
+
 
 .game-room__sidebar {
   width: 280px;
