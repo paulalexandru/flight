@@ -86,6 +86,7 @@ body {
   justify-content: flex-start;
   align-items: flex-start;
   padding: 48px 0 48px 100px;
+  overflow-x: auto;
 }
 
 /* Coloană rezervată pe viitor pentru reclame (goală momentan). */
