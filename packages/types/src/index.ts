@@ -49,6 +49,7 @@ export interface ClientToServerEvents {
   "matchmaking:findMatch": () => void;
   "matchmaking:cancel": () => void;
   "room:join": (payload: { gameId: string }) => void;
+  "room:leave": (payload: { gameId: string }) => void;
 }
 
 export interface ServerToClientEvents {

@@ -1,5 +1,6 @@
 import type { Server, Socket } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@flight/types";
+import { setPlayerGame } from "./activeGames";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -17,7 +18,18 @@ function broadcastRoomState(io: AppServer, gameId: string): void {
 export function registerRoomHandlers(io: AppServer, socket: AppSocket): void {
   socket.on("room:join", ({ gameId }) => {
     socket.join(gameId);
+    setPlayerGame(socket.id, gameId);
     io.to(gameId).emit("room:activity", { gameId, playerId: socket.id, type: "joined", at: Date.now() });
+    broadcastRoomState(io, gameId);
+  });
+
+  // Ieșire voluntară din sală (ex: utilizatorul navighează înapoi la pagina principală).
+  // Nu ștergem legătura socket -> gameId, ca să putem readuce jucătorul înapoi în
+  // aceeași sală dacă apasă din nou "Play now" cât timp adversarul e încă acolo.
+  socket.on("room:leave", ({ gameId }) => {
+    if (!socket.rooms.has(gameId)) return;
+    socket.leave(gameId);
+    io.to(gameId).emit("room:activity", { gameId, playerId: socket.id, type: "left", at: Date.now() });
     broadcastRoomState(io, gameId);
   });
 

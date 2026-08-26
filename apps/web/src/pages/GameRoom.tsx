@@ -52,6 +52,7 @@ export function GameRoom() {
     return () => {
       socket.off("room:state", handleRoomState);
       socket.off("room:activity", handleActivity);
+      socket.emit("room:leave", { gameId });
     };
   }, [gameId]);
 
