@@ -234,11 +234,6 @@ export function GameRoom() {
     <div className="game-room">
       <section className="game-room__main">
         <h2>Sala de joc #{gameId}</h2>
-        {opponentJoined ? (
-          <span className="badge ready">Adversarul a intrat în sală!</span>
-        ) : (
-          <span className="badge waiting">Se așteaptă adversarul...</span>
-        )}
 
         <div className="game-room__work-row">
           <div className="game-room__board-col">
@@ -290,6 +285,11 @@ export function GameRoom() {
               <div className="board-title">
                 <span className="player-avatar" aria-hidden="true">
                   👤
+                  {!opponentJoined && (
+                    <span className="disconnected-badge" title="Adversarul a ieșit din sală">
+                      🔌
+                    </span>
+                  )}
                 </span>
                 <span className="board-title__name-row">
                   Adversarul
@@ -303,6 +303,11 @@ export function GameRoom() {
                 <div className="board-title">
                   <span className="player-avatar" aria-hidden="true">
                     👤
+                    {!opponentJoined && (
+                      <span className="disconnected-badge" title="Adversarul a ieșit din sală">
+                        🔌
+                      </span>
+                    )}
                   </span>
                   <span className="board-title__name-row">
                     Adversarul
@@ -318,6 +323,11 @@ export function GameRoom() {
                 <div className="board-title">
                   <span className="player-avatar" aria-hidden="true">
                     👤
+                    {!opponentJoined && (
+                      <span className="disconnected-badge" title="Adversarul a ieșit din sală">
+                        🔌
+                      </span>
+                    )}
                   </span>
                   <span className="board-title__name-row">Adversarul</span>
                 </div>
