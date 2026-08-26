@@ -200,7 +200,6 @@ body {
 .game-room__work-row {
   display: flex;
   gap: 20px;
-  margin-top: 32px;
   text-align: left;
   align-items: stretch;
 }
