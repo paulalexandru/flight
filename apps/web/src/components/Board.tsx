@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import type { ShotResult } from "@flight/types";
 import { PLANE_COLORS, planeColorIndex } from "./PlaneTray";
+import cloudIconUrl from "../assets/cloud-icon.png";
 
 interface BoardProps {
   onCellClick?: (cell: Cell) => void;
@@ -133,19 +134,13 @@ export function Board({
               }}
             >
               {status === "miss" && (
-                <svg
-                  width="26"
-                  height="26"
-                  viewBox="0 0 64 64"
+                <img
+                  src={cloudIconUrl}
+                  alt=""
+                  width={28}
+                  height={28}
                   style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
-                >
-                  <path
-                    d="M20 44c-7 0-12-5.6-12-12.5S13 19 20 19c1.6-6 7.6-10.5 14.5-10.5 8 0 14.6 5.7 16 13.2 6.6.9 11.5 6.5 11.5 13.3 0 7.5-6 13-13.5 13H20z"
-                    fill="#ecf0f1"
-                    stroke="#bfc9ce"
-                    strokeWidth="2"
-                  />
-                </svg>
+                />
               )}
               {icon && (
                 <span
