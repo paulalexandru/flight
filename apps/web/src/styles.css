@@ -365,14 +365,10 @@ body {
 
 .disconnected-badge {
   position: absolute;
-  bottom: -6px;
-  right: -6px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #e74c3c;
-  border: 2px solid #201f1c;
-  font-size: 10px;
+  inset: 0;
+  border-radius: 6px;
+  background: rgba(231, 76, 60, 0.55);
+  font-size: 22px;
   display: flex;
   align-items: center;
   justify-content: center;

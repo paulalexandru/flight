@@ -287,7 +287,7 @@ export function GameRoom() {
                   👤
                   {!opponentJoined && (
                     <span className="disconnected-badge" title="Adversarul a ieșit din sală">
-                      🔌
+                      ⚡
                     </span>
                   )}
                 </span>
@@ -305,7 +305,7 @@ export function GameRoom() {
                     👤
                     {!opponentJoined && (
                       <span className="disconnected-badge" title="Adversarul a ieșit din sală">
-                        🔌
+                        ⚡
                       </span>
                     )}
                   </span>
@@ -325,7 +325,7 @@ export function GameRoom() {
                     👤
                     {!opponentJoined && (
                       <span className="disconnected-badge" title="Adversarul a ieșit din sală">
-                        🔌
+                        ⚡
                       </span>
                     )}
                   </span>
