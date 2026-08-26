@@ -26,7 +26,7 @@ body {
 
 /* Coloana din stânga, pe post de meniu - fundal închis, distinct de zona de lucru */
 .app-sidebar {
-  width: 240px;
+  width: 172px;
   flex-shrink: 0;
   background: #1e1c1a;
   padding: 24px 16px;
