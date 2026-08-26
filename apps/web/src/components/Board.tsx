@@ -3,6 +3,7 @@ import type { Cell, PlanePlacement } from "@flight/types";
 import { useState } from "react";
 
 import type { ShotResult } from "@flight/types";
+import { PLANE_COLORS, planeColorIndex } from "./PlaneTray";
 
 interface BoardProps {
   onCellClick?: (cell: Cell) => void;
@@ -88,10 +89,14 @@ export function Board({
           const status = statusFor(row, col);
           const key = `${row}:${col}`;
           const occupyingPlaneId = planeCellMap.get(key);
+          const planeColor =
+            occupyingPlaneId !== undefined
+              ? PLANE_COLORS[planeColorIndex(occupyingPlaneId)]
+              : undefined;
           const isPreview = previewKeys.has(key);
           let background = status === "hit" || status === "sunk" ? "#e74c3c" : status === "miss" ? "#95a5a6" : "#3a5a78";
           if (status === "head") background = "#f1c40f";
-          if (occupyingPlaneId && !status) background = "#81b64c";
+          if (occupyingPlaneId && !status) background = planeColor?.background ?? "#81b64c";
           if (isPreview) background = previewValid ? "#b6e388" : "#e77b7b";
 
           return (
@@ -117,7 +122,7 @@ export function Board({
                 width: 42,
                 height: 42,
                 background,
-                border: occupyingPlaneId ? "1px solid #5f9a3a" : "1px solid #2c2a27",
+                border: occupyingPlaneId ? `1px solid ${planeColor?.border ?? "#5f9a3a"}` : "1px solid #2c2a27",
                 cursor: occupyingPlaneId && onPlanesChange ? "grab" : onCellClick ? "pointer" : "default",
                 fontSize: 20,
                 lineHeight: "42px",

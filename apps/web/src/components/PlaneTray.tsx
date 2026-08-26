@@ -19,8 +19,23 @@ const NEXT_ORIENTATION: Record<PlaneOrientation, PlaneOrientation> = {
   W: "N",
 };
 
+// Aceleași culori ca pe tablă (Board.tsx), indexate stabil după id-ul avionului
+// (ex: "tray-0" -> index 0), ca fiecare avion să-și păstreze culoarea indiferent
+// de ordinea în care avioanele rămase sunt afișate în tavă.
+export const PLANE_COLORS = [
+  { border: "#3476a0", background: "#9adcf5" },
+  { border: "#baaa45", background: "#dad25a" },
+  { border: "#a437ca", background: "#dabefa" },
+];
+
+export function planeColorIndex(planeId: string): number {
+  const match = /(\d+)/.exec(planeId);
+  const n = match ? Number(match[1]) : 0;
+  return n % PLANE_COLORS.length;
+}
+
 /** Randează un mini-preview al formei avionului într-un grid mic, pentru tava laterală. */
-function PlanePreview({ orientation }: { orientation: PlaneOrientation }) {
+function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation; planeId: string }) {
   const shape = getPlaneShape(orientation);
   const rows = shape.map((c) => c.row);
   const cols = shape.map((c) => c.col);
@@ -32,6 +47,7 @@ function PlanePreview({ orientation }: { orientation: PlaneOrientation }) {
   const width = maxCol - minCol + 1;
   const occupied = new Set(shape.map((c) => `${c.row - minRow}:${c.col - minCol}`));
   const headKey = `${0 - minRow}:${0 - minCol}`;
+  const color = PLANE_COLORS[planeColorIndex(planeId)];
 
   const cells = [];
   for (let r = 0; r < height; r++) {
@@ -43,7 +59,8 @@ function PlanePreview({ orientation }: { orientation: PlaneOrientation }) {
           style={{
             width: 10,
             height: 10,
-            background: key === headKey ? "#fff" : occupied.has(key) ? "#81b64c" : "transparent",
+            background: key === headKey ? "#fff" : occupied.has(key) ? color.background : "transparent",
+            border: occupied.has(key) && key !== headKey ? `1px solid ${color.border}` : undefined,
             borderRadius: 2,
           }}
         />
@@ -72,7 +89,7 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
             draggable
             onDragStart={() => onDragStart(plane.id)}
           >
-            <PlanePreview orientation={plane.orientation} />
+            <PlanePreview orientation={plane.orientation} planeId={plane.id} />
             <button
               type="button"
               className="plane-tray__rotate"
