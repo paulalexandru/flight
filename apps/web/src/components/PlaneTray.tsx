@@ -1,6 +1,6 @@
 import { getPlaneShape } from "@flight/game-logic";
 import type { PlaneOrientation } from "@flight/types";
-import { setPlaneDragImage } from "./planeDragImage";
+import { setEmptyDragImage, markDragging } from "./planeDragImage";
 
 export interface TrayPlane {
   id: string;
@@ -35,7 +35,9 @@ export function planeColorIndex(planeId: string): number {
   return n % PLANE_COLORS.length;
 }
 
-/** Randează forma reală a avionului, la aceeași mărime ca celulele de pe tablă. */
+/** Randează forma reală a avionului, cu exact același stil ca pe tablă (contur
+ * solid pe exterior, punctat între celulele proprii, steluță pe cap), la aceeași
+ * mărime ca celulele de pe tablă. */
 function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation; planeId: string }) {
   const shape = getPlaneShape(orientation);
   const rows = shape.map((c) => c.row);
@@ -49,28 +51,42 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
   const occupied = new Set(shape.map((c) => `${c.row - minRow}:${c.col - minCol}`));
   const headKey = `${0 - minRow}:${0 - minCol}`;
   const color = PLANE_COLORS[planeColorIndex(planeId)];
+  const sameNeighbor = (r: number, c: number) => occupied.has(`${r}:${c}`);
 
   const cells = [];
   for (let r = 0; r < height; r++) {
     for (let c = 0; c < width; c++) {
       const key = `${r}:${c}`;
+      const isOccupied = occupied.has(key);
+      const solid = `1px solid ${color.border}`;
+      const dashed = `1px dashed ${color.border}`;
       cells.push(
         <div
           key={key}
           style={{
             width: "var(--cell-size, 42px)",
             height: "var(--cell-size, 42px)",
-            background: key === headKey ? "#fff" : occupied.has(key) ? color.background : "transparent",
-            border: occupied.has(key) && key !== headKey ? `2px solid ${color.border}` : undefined,
-            borderRadius: 4,
+            background: isOccupied ? color.background : "transparent",
+            borderTop: isOccupied ? (sameNeighbor(r - 1, c) ? dashed : solid) : undefined,
+            borderBottom: isOccupied ? (sameNeighbor(r + 1, c) ? dashed : solid) : undefined,
+            borderLeft: isOccupied ? (sameNeighbor(r, c - 1) ? dashed : solid) : undefined,
+            borderRight: isOccupied ? (sameNeighbor(r, c + 1) ? dashed : solid) : undefined,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "relative",
           }}
-        />
+        >
+          {key === headKey && (
+            <span style={{ color: "#fff", fontSize: 15, textShadow: "0 0 2px #000" }}>★</span>
+          )}
+        </div>
       );
     }
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${width}, var(--cell-size, 42px))`, gap: 2 }}>
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${width}, var(--cell-size, 42px))`, gap: 0 }}>
       {cells}
     </div>
   );
@@ -90,7 +106,8 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
             className="plane-tray__item plane-tray__item--full"
             draggable
             onDragStart={(e) => {
-              setPlaneDragImage(e, currentPlane.orientation, currentPlane.id);
+              setEmptyDragImage(e);
+              markDragging(e);
               onDragStart(currentPlane.id);
             }}
           >
