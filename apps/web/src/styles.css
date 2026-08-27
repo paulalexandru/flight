@@ -263,6 +263,12 @@ body {
   gap: 16px;
 }
 
+.plane-tray__current {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .plane-tray__item {
   display: flex;
   flex-direction: column;
@@ -272,6 +278,12 @@ body {
   border-radius: 8px;
   padding: 10px;
   cursor: grab;
+}
+
+.plane-tray__count {
+  font-size: 22px;
+  font-weight: 700;
+  color: #b8b6b3;
 }
 
 .plane-tray__rotate {

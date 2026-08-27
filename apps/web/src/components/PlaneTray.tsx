@@ -35,7 +35,7 @@ export function planeColorIndex(planeId: string): number {
   return n % PLANE_COLORS.length;
 }
 
-/** Randează un mini-preview al formei avionului într-un grid mic, pentru tava laterală. */
+/** Randează forma reală a avionului, la aceeași mărime ca celulele de pe tablă. */
 function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation; planeId: string }) {
   const shape = getPlaneShape(orientation);
   const rows = shape.map((c) => c.row);
@@ -58,11 +58,11 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
         <div
           key={key}
           style={{
-            width: 10,
-            height: 10,
+            width: "var(--cell-size, 42px)",
+            height: "var(--cell-size, 42px)",
             background: key === headKey ? "#fff" : occupied.has(key) ? color.background : "transparent",
-            border: occupied.has(key) && key !== headKey ? `1px solid ${color.border}` : undefined,
-            borderRadius: 2,
+            border: occupied.has(key) && key !== headKey ? `2px solid ${color.border}` : undefined,
+            borderRadius: 4,
           }}
         />
       );
@@ -70,49 +70,50 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: `repeat(${width}, 10px)`, gap: 1 }}>
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${width}, var(--cell-size, 42px))`, gap: 2 }}>
       {cells}
     </div>
   );
 }
 
-/** Coloana din dreapta cu avioanele care nu au fost încă plasate pe tablă. */
+/** Coloana din dreapta cu avionul curent de plasat (unul câte unul, cu contor pentru restul). */
 export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
-  const previewRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const currentPlane = planes[0];
 
   return (
     <div className="plane-tray">
-      <h4 className="plane-tray__title">Avioane de plasat</h4>
-      {planes.length === 0 && <p className="plane-tray__empty">Toate avioanele au fost plasate ✅</p>}
-      <div className="plane-tray__list">
-        {planes.map((plane) => (
+      <h4 className="plane-tray__title">Avion de plasat</h4>
+      {!currentPlane && <p className="plane-tray__empty">Toate avioanele au fost plasate ✅</p>}
+      {currentPlane && (
+        <div className="plane-tray__current">
           <div
-            key={plane.id}
-            className="plane-tray__item"
+            className="plane-tray__item plane-tray__item--full"
             draggable
             onDragStart={(e) => {
-              const node = previewRefs.current[plane.id];
+              const node = previewRef.current;
               if (node) {
                 const rect = node.getBoundingClientRect();
                 e.dataTransfer.setDragImage(node, rect.width / 2, rect.height / 2);
               }
-              onDragStart(plane.id);
+              onDragStart(currentPlane.id);
             }}
           >
-            <div ref={(el) => (previewRefs.current[plane.id] = el)}>
-              <PlanePreview orientation={plane.orientation} planeId={plane.id} />
+            <div ref={previewRef}>
+              <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
             </div>
             <button
               type="button"
               className="plane-tray__rotate"
-              onClick={() => onRotate(plane.id)}
+              onClick={() => onRotate(currentPlane.id)}
               title="Rotește avionul"
             >
               ⟳
             </button>
           </div>
-        ))}
-      </div>
+          {planes.length > 1 && <span className="plane-tray__count">×{planes.length}</span>}
+        </div>
+      )}
     </div>
   );
 }
