@@ -223,6 +223,14 @@ export function GameRoom() {
     });
   };
 
+  // Golește tabla și pune toate avioanele înapoi în tavă (de la zero), ca jucătorul
+  // să poată reîncepe plasarea dacă nu-i place aranjamentul curent.
+  const handleClearBoard = () => {
+    setPlacedPlanes([]);
+    setTrayPlanes(createEmptyTrayPlanes());
+    setDraggingTrayId(null);
+  };
+
   const draggingTrayOrientation = draggingTrayId
     ? trayPlanes.find((p) => p.id === draggingTrayId)?.orientation
     : undefined;
@@ -286,6 +294,13 @@ export function GameRoom() {
                   onClick={handleConfirmPlacement}
                 >
                   Gata
+                </button>
+                <button
+                  className="clear-board-button"
+                  disabled={placedPlanes.length === 0}
+                  onClick={handleClearBoard}
+                >
+                  Golește tabla
                 </button>
               </>
             )}

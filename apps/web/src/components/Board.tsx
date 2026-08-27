@@ -1,6 +1,6 @@
 import { BOARD_SIZE, getPlaneCells, isValidPlanePlacement, getOccupiedCellKeys } from "@flight/game-logic";
 import type { Cell, PlanePlacement } from "@flight/types";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { ShotResult } from "@flight/types";
 import { PLANE_COLORS, planeColorIndex } from "./PlaneTray";
@@ -34,6 +34,13 @@ export function Board({
 }: BoardProps) {
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [draggingPlaneId, setDraggingPlaneId] = useState<string | null>(null);
+  const emptyDragImageRef = useRef<HTMLImageElement | null>(null);
+
+  if (!emptyDragImageRef.current && typeof Image !== "undefined") {
+    const img = new Image();
+    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7";
+    emptyDragImageRef.current = img;
+  }
 
   const rows = Array.from({ length: BOARD_SIZE }, (_, row) => row);
   const cols = Array.from({ length: BOARD_SIZE }, (_, col) => col);
@@ -146,8 +153,11 @@ export function Board({
             <button
               key={key}
               draggable={Boolean(occupyingPlaneId && onPlanesChange)}
-              onDragStart={() => {
+              onDragStart={(e) => {
                 if (occupyingPlaneId) setDraggingPlaneId(occupyingPlaneId);
+                if (emptyDragImageRef.current) {
+                  e.dataTransfer.setDragImage(emptyDragImageRef.current, 0, 0);
+                }
               }}
               onDragOver={(e) => {
                 e.preventDefault();

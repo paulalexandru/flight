@@ -306,6 +306,7 @@ body {
 
 .ready-button {
   margin-top: 20px;
+  margin-right: 10px;
   padding: 12px 18px;
   font-size: 15px;
   font-weight: 600;
@@ -324,6 +325,29 @@ body {
 .ready-button:disabled {
   background: #55524d;
   color: #a8a49e;
+  cursor: not-allowed;
+}
+
+.clear-board-button {
+  margin-top: 20px;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #6b6864;
+  background: transparent;
+  color: #d0cec9;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.clear-board-button:hover:not(:disabled) {
+  background: #3d3a36;
+}
+
+.clear-board-button:disabled {
+  color: #6b6864;
+  border-color: #4a4642;
   cursor: not-allowed;
 }
 

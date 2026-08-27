@@ -78,8 +78,14 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
 
 /** Coloana din dreapta cu avionul curent de plasat (unul câte unul, cu contor pentru restul). */
 export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
-  const previewRef = useRef<HTMLDivElement | null>(null);
   const currentPlane = planes[0];
+  const emptyDragImageRef = useRef<HTMLImageElement | null>(null);
+
+  if (!emptyDragImageRef.current && typeof Image !== "undefined") {
+    const img = new Image();
+    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7";
+    emptyDragImageRef.current = img;
+  }
 
   return (
     <div className="plane-tray">
@@ -91,17 +97,13 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
             className="plane-tray__item plane-tray__item--full"
             draggable
             onDragStart={(e) => {
-              const node = previewRef.current;
-              if (node) {
-                const rect = node.getBoundingClientRect();
-                e.dataTransfer.setDragImage(node, rect.width / 2, rect.height / 2);
+              if (emptyDragImageRef.current) {
+                e.dataTransfer.setDragImage(emptyDragImageRef.current, 0, 0);
               }
               onDragStart(currentPlane.id);
             }}
           >
-            <div ref={previewRef}>
-              <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
-            </div>
+            <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
             <button
               type="button"
               className="plane-tray__rotate"
