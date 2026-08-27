@@ -474,25 +474,14 @@ body {
   }
 }
 
-/* Grid-urile si sidebarul de notificari se micsoreaza treptat ca sa incapa fara scroll orizontal */
-@media (max-width: 1450px) {
-  :root {
-    --cell-size: 34px;
-  }
-
-  .game-room__sidebar {
-    width: 280px;
-  }
+/* Grid-urile si sidebarul de notificari se micsoreaza FLUID (proportional cu latimea ferestrei),
+   pastrand acelasi raport ca la ~1850px, fara salturi intre rezolutii */
+:root {
+  --cell-size: clamp(24px, 2.27vw, 42px);
 }
 
-@media (max-width: 1150px) {
-  :root {
-    --cell-size: 30px;
-  }
-
-  .game-room__sidebar {
-    width: 240px;
-  }
+.game-room__sidebar {
+  width: clamp(220px, 19.46vw, 360px);
 }
 
 /* Tablete: meniul lateral se ingusteaza la iconite, sidebarul de notificari e mai mic */
@@ -525,7 +514,7 @@ body {
 /* Ecrane inguste: coloanele din game-room se pun una sub alta (inainte sa nu mai incapa pe orizontala) */
 @media (max-width: 950px) {
   :root {
-    --cell-size: 38px;
+    --cell-size: clamp(28px, 8vw, 38px);
   }
 
   .game-room {
@@ -547,12 +536,6 @@ body {
   .game-room__sidebar {
     width: 100%;
     max-width: calc(var(--cell-size) * 10 + 32px);
-  }
-}
-
-@media (max-width: 480px) {
-  :root {
-    --cell-size: 28px;
   }
 }
 
