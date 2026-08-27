@@ -85,7 +85,7 @@ export function Board({
   return (
     <div
       className="board-grid"
-      style={{ display: "grid", gridTemplateColumns: `repeat(${BOARD_SIZE}, 42px)`, gap: 0 }}
+      style={{ display: "grid", gridTemplateColumns: `repeat(${BOARD_SIZE}, var(--cell-size, 42px))`, gap: 0 }}
       onDragLeave={() => setHoverCell(null)}
     >
       {rows.map((row) =>
@@ -162,8 +162,8 @@ export function Board({
                 if (occupyingPlaneId) onRotatePlane?.(occupyingPlaneId);
               }}
               style={{
-                width: 42,
-                height: 42,
+                width: "var(--cell-size, 42px)",
+                height: "var(--cell-size, 42px)",
                 background,
                 borderTop,
                 borderRight,
@@ -171,7 +171,7 @@ export function Board({
                 borderLeft,
                 cursor: occupyingPlaneId && onPlanesChange ? "grab" : onCellClick ? "pointer" : "default",
                 fontSize: 20,
-                lineHeight: "42px",
+                lineHeight: "var(--cell-size, 42px)",
                 position: "relative",
               }}
             >

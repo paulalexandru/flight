@@ -1,5 +1,6 @@
 :root {
   color-scheme: dark;
+  --cell-size: 42px;
 }
 
 * {
@@ -220,8 +221,8 @@ body {
 }
 
 .game-room__extra-col {
-  flex: 0 0 452px;
-  width: 452px;
+  flex: 0 0 calc(var(--cell-size) * 10 + 32px);
+  width: calc(var(--cell-size) * 10 + 32px);
 }
 
 .board-grid {
@@ -473,6 +474,27 @@ body {
   }
 }
 
+/* Grid-urile si sidebarul de notificari se micsoreaza treptat ca sa incapa fara scroll orizontal */
+@media (max-width: 1450px) {
+  :root {
+    --cell-size: 34px;
+  }
+
+  .game-room__sidebar {
+    width: 280px;
+  }
+}
+
+@media (max-width: 1150px) {
+  :root {
+    --cell-size: 30px;
+  }
+
+  .game-room__sidebar {
+    width: 240px;
+  }
+}
+
 /* Tablete: meniul lateral se ingusteaza la iconite, sidebarul de notificari e mai mic */
 @media (max-width: 1100px) {
   .app-sidebar {
@@ -498,14 +520,14 @@ body {
   .game-room {
     width: 100%;
   }
-
-  .game-room__sidebar {
-    width: 260px;
-  }
 }
 
 /* Ecrane inguste: coloanele din game-room se pun una sub alta (inainte sa nu mai incapa pe orizontala) */
-@media (max-width: 1600px) {
+@media (max-width: 950px) {
+  :root {
+    --cell-size: 38px;
+  }
+
   .game-room {
     flex-direction: column;
     width: 100%;
@@ -518,13 +540,19 @@ body {
   .game-room__board-col,
   .game-room__extra-col {
     width: 100%;
-    max-width: 452px;
+    max-width: calc(var(--cell-size) * 10 + 32px);
     flex: 1 1 auto;
   }
 
   .game-room__sidebar {
     width: 100%;
-    max-width: 452px;
+    max-width: calc(var(--cell-size) * 10 + 32px);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --cell-size: 28px;
   }
 }
 
