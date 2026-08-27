@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import type { ShotResult } from "@flight/types";
 import { PLANE_COLORS, planeColorIndex } from "./PlaneTray";
-import { setEmptyDragImage, markDragging } from "./planeDragImage";
 import cloudIconUrl from "../assets/cloud-icon.png";
 
 interface BoardProps {
@@ -150,8 +149,6 @@ export function Board({
               onDragStart={(e) => {
                 if (occupyingPlaneId) {
                   setDraggingPlaneId(occupyingPlaneId);
-                  setEmptyDragImage(e);
-                  markDragging(e);
                 }
               }}
               onDragOver={(e) => {

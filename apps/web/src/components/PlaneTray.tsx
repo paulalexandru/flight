@@ -1,6 +1,6 @@
+import { useRef } from "react";
 import { getPlaneShape } from "@flight/game-logic";
 import type { PlaneOrientation } from "@flight/types";
-import { setEmptyDragImage, markDragging } from "./planeDragImage";
 
 export interface TrayPlane {
   id: string;
@@ -95,6 +95,7 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
 /** Coloana din dreapta cu avionul curent de plasat (unul câte unul, cu contor pentru restul). */
 export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
   const currentPlane = planes[0];
+  const previewRef = useRef<HTMLDivElement | null>(null);
 
   return (
     <div className="plane-tray">
@@ -106,12 +107,17 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
             className="plane-tray__item plane-tray__item--full"
             draggable
             onDragStart={(e) => {
-              setEmptyDragImage(e);
-              markDragging(e);
+              // Fantoma de drag e chiar forma avionului (fără cutia/butonul din jur),
+              // ca să arate exact ca avionul deja plasat pe tablă în timpul tragerii.
+              if (previewRef.current) {
+                e.dataTransfer.setDragImage(previewRef.current, previewRef.current.offsetWidth / 2, previewRef.current.offsetHeight / 2);
+              }
               onDragStart(currentPlane.id);
             }}
           >
-            <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
+            <div ref={previewRef}>
+              <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
+            </div>
             <button
               type="button"
               className="plane-tray__rotate"
