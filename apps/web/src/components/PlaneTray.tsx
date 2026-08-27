@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { getPlaneShape } from "@flight/game-logic";
 import type { PlaneOrientation } from "@flight/types";
 
@@ -77,6 +78,8 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
 
 /** Coloana din dreapta cu avioanele care nu au fost încă plasate pe tablă. */
 export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
+  const previewRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
   return (
     <div className="plane-tray">
       <h4 className="plane-tray__title">Avioane de plasat</h4>
@@ -87,9 +90,18 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
             key={plane.id}
             className="plane-tray__item"
             draggable
-            onDragStart={() => onDragStart(plane.id)}
+            onDragStart={(e) => {
+              const node = previewRefs.current[plane.id];
+              if (node) {
+                const rect = node.getBoundingClientRect();
+                e.dataTransfer.setDragImage(node, rect.width / 2, rect.height / 2);
+              }
+              onDragStart(plane.id);
+            }}
           >
-            <PlanePreview orientation={plane.orientation} planeId={plane.id} />
+            <div ref={(el) => (previewRefs.current[plane.id] = el)}>
+              <PlanePreview orientation={plane.orientation} planeId={plane.id} />
+            </div>
             <button
               type="button"
               className="plane-tray__rotate"
