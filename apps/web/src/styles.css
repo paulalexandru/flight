@@ -461,7 +461,7 @@ body {
 /* ---------- Responsive breakpoints ---------- */
 
 /* Ecrane medii: reduce padding-ul lateral, coloana de reclame devine mai ingusta */
-@media (max-width: 1700px) {
+@media (max-width: 1850px) {
   .app-content {
     padding-left: 48px;
   }
