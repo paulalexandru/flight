@@ -95,7 +95,13 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
 /** Coloana din dreapta cu avionul curent de plasat (unul câte unul, cu contor pentru restul). */
 export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
   const currentPlane = planes[0];
-  const previewRef = useRef<HTMLDivElement | null>(null);
+  const emptyDragImageRef = useRef<HTMLImageElement | null>(null);
+
+  if (!emptyDragImageRef.current && typeof Image !== "undefined") {
+    const img = new Image();
+    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7";
+    emptyDragImageRef.current = img;
+  }
 
   return (
     <div className="plane-tray">
@@ -107,17 +113,17 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
             className="plane-tray__item plane-tray__item--full"
             draggable
             onDragStart={(e) => {
-              // Fantoma de drag e chiar forma avionului (fără cutia/butonul din jur),
-              // ca să arate exact ca avionul deja plasat pe tablă în timpul tragerii.
-              if (previewRef.current) {
-                e.dataTransfer.setDragImage(previewRef.current, previewRef.current.offsetWidth / 2, previewRef.current.offsetHeight / 2);
+              // Ascundem complet fantoma nativă (browserul ar arăta oricum un al doilea
+              // avion peste previzualizarea deja desenată pe grid) — feedback-ul vizual
+              // vine din previzualizarea colorată de pe tablă, nu dintr-o fantomă separată.
+              e.dataTransfer.effectAllowed = "move";
+              if (emptyDragImageRef.current) {
+                e.dataTransfer.setDragImage(emptyDragImageRef.current, 0, 0);
               }
               onDragStart(currentPlane.id);
             }}
           >
-            <div ref={previewRef}>
-              <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
-            </div>
+            <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
             <button
               type="button"
               className="plane-tray__rotate"
