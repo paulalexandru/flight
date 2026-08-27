@@ -1,6 +1,6 @@
-import { useRef } from "react";
 import { getPlaneShape } from "@flight/game-logic";
 import type { PlaneOrientation } from "@flight/types";
+import { setPlaneDragImage } from "./planeDragImage";
 
 export interface TrayPlane {
   id: string;
@@ -79,13 +79,6 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
 /** Coloana din dreapta cu avionul curent de plasat (unul câte unul, cu contor pentru restul). */
 export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
   const currentPlane = planes[0];
-  const emptyDragImageRef = useRef<HTMLImageElement | null>(null);
-
-  if (!emptyDragImageRef.current && typeof Image !== "undefined") {
-    const img = new Image();
-    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7";
-    emptyDragImageRef.current = img;
-  }
 
   return (
     <div className="plane-tray">
@@ -97,9 +90,7 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
             className="plane-tray__item plane-tray__item--full"
             draggable
             onDragStart={(e) => {
-              if (emptyDragImageRef.current) {
-                e.dataTransfer.setDragImage(emptyDragImageRef.current, 0, 0);
-              }
+              setPlaneDragImage(e, currentPlane.orientation, currentPlane.id);
               onDragStart(currentPlane.id);
             }}
           >
