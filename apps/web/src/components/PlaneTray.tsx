@@ -11,6 +11,11 @@ interface PlaneTrayProps {
   planes: TrayPlane[];
   onDragStart: (planeId: string) => void;
   onRotate: (planeId: string) => void;
+  /** Se declanșează mereu la finalul drag-ului (indiferent dacă a existat un drop
+   * valid), ca starea de "avion tras" să nu rămână blocată dacă drop-ul eșuează. */
+  onDragEnd?: () => void;
+  /** Text informativ opțional afișat sub titlu, cât timp mai sunt avioane de plasat. */
+  hint?: string;
 }
 
 const NEXT_ORIENTATION: Record<PlaneOrientation, PlaneOrientation> = {
@@ -93,7 +98,7 @@ function PlanePreview({ orientation, planeId }: { orientation: PlaneOrientation;
 }
 
 /** Coloana din dreapta cu avionul curent de plasat (unul câte unul, cu contor pentru restul). */
-export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
+export function PlaneTray({ planes, onDragStart, onRotate, onDragEnd, hint }: PlaneTrayProps) {
   const currentPlane = planes[0];
   const emptyDragImageRef = useRef<HTMLImageElement | null>(null);
 
@@ -106,6 +111,7 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
   return (
     <div className="plane-tray">
       <h4 className="plane-tray__title">Avion de plasat</h4>
+      {hint && currentPlane && <p className="plane-tray__hint">{hint}</p>}
       {!currentPlane && <p className="plane-tray__empty">Toate avioanele au fost plasate ✅</p>}
       {currentPlane && (
         <div className="plane-tray__current">
@@ -122,6 +128,7 @@ export function PlaneTray({ planes, onDragStart, onRotate }: PlaneTrayProps) {
               }
               onDragStart(currentPlane.id);
             }}
+            onDragEnd={() => onDragEnd?.()}
           >
             <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
             <button

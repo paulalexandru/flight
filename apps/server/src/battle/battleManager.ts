@@ -142,6 +142,28 @@ export function getWinnerId(gameId: string): string | null {
 }
 
 /**
+ * Un jucător a părăsit sala (voluntar sau prin deconectare) în timp ce o luptă
+ * era deja în desfășurare și nefinalizată -> adversarul câștigă automat prin
+ * abandon (nu are sens să continue jocul cu un singur jucător prezent).
+ * Întoarce id-ul câștigătorului doar dacă acest abandon chiar a decis jocul
+ * (nu dacă lupta nu începuse încă sau era deja terminată).
+ */
+export function forfeitBattle(gameId: string, leavingPlayerId: string): string | null {
+  const battle = battles.get(gameId);
+  if (!battle || !battle.started || battle.winnerId) return null;
+  const opponentId = Array.from(battle.planesByPlayer.keys()).find((id) => id !== leavingPlayerId);
+  if (!opponentId) return null;
+  battle.winnerId = opponentId;
+  return opponentId;
+}
+
+/** Avioanele plasate de un jucător anume, într-o sală (folosit la finalul jocului
+ * pentru a le dezvălui adversarului). */
+export function getPlanesFor(gameId: string, playerId: string): PlanePlacement[] {
+  return battles.get(gameId)?.planesByPlayer.get(playerId) ?? [];
+}
+
+/**
  * Instantaneu al stării de luptă pentru un jucător anume, folosit pentru a-l
  * "resincroniza" dacă a ieșit din sală (fără să termine jocul) și a reintrat.
  */
@@ -157,6 +179,7 @@ export function getBattleSyncFor(
   winnerId: string | null;
   myShots: Shot[];
   incomingShots: Shot[];
+  opponentPlanes: PlanePlacement[] | null;
 } {
   const battle = battles.get(gameId);
   if (!battle) {
@@ -168,6 +191,7 @@ export function getBattleSyncFor(
       winnerId: null,
       myShots: [],
       incomingShots: [],
+      opponentPlanes: null,
     };
   }
   return {
@@ -178,5 +202,8 @@ export function getBattleSyncFor(
     winnerId: battle.winnerId,
     myShots: battle.shotsByShooter.get(playerId) ?? [],
     incomingShots: opponentId ? battle.shotsByShooter.get(opponentId) ?? [] : [],
+    // Dezvăluim avioanele adversarului doar dacă jocul s-a terminat deja — altfel
+    // ar fi un avantaj neloial să le vezi în timp ce lupta e încă în desfășurare.
+    opponentPlanes: battle.winnerId && opponentId ? battle.planesByPlayer.get(opponentId) ?? [] : null,
   };
 }

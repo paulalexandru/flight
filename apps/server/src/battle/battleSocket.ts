@@ -1,5 +1,5 @@
 import type { Server, Socket } from "socket.io";
-import type { ClientToServerEvents, ServerToClientEvents } from "@flight/types";
+import type { ClientToServerEvents, PlanePlacement, ServerToClientEvents } from "@flight/types";
 import { getRoomRoster } from "../rooms/roomRoster";
 import {
   submitPlacement,
@@ -8,6 +8,7 @@ import {
   isBattleStarted,
   shoot,
   getWinnerId,
+  getPlanesFor,
   resetBattle,
 } from "./battleManager";
 
@@ -62,7 +63,13 @@ export function registerBattleHandlers(io: AppServer, socket: AppSocket, playerI
     if (result.gameOver) {
       const winnerId = getWinnerId(gameId);
       if (winnerId) {
-        io.to(gameId).emit("battle:over", { gameId, winnerId });
+        // Dezvăluim avioanele ambilor jucători, ca fiecare să vadă cum era
+        // aranjată tabla adversarului la finalul partidei.
+        const planes: Record<string, PlanePlacement[]> = {
+          [playerId]: getPlanesFor(gameId, playerId),
+          [opponentId]: getPlanesFor(gameId, opponentId),
+        };
+        io.to(gameId).emit("battle:over", { gameId, winnerId, planes });
       }
     }
   });

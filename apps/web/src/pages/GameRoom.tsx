@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { socket, playerId } from "../socket";
+import { playShotSound, playCrowdWinSound, playCrowdLoseSound } from "../utils/sounds";
 import { Board } from "../components/Board";
 import { PlaneTray, NEXT_ORIENTATION } from "../components/PlaneTray";
-import { TOTAL_PLANES_PER_PLAYER, isValidPlanePlacement, getOccupiedCellKeys } from "@flight/game-logic";
-import type { Cell, PlanePlacement, ShotResult } from "@flight/types";
+import {
+  TOTAL_PLANES_PER_PLAYER,
+  BOARD_SIZE,
+  isValidPlanePlacement,
+  getOccupiedCellKeys,
+  getPlaneShape,
+} from "@flight/game-logic";
+import type { Cell, PlanePlacement, PlaneOrientation, ShotResult } from "@flight/types";
 
 interface ActivityEntry {
   key: string;
@@ -19,6 +26,12 @@ function createEmptyTrayPlanes(): { id: string; orientation: "N" | "E" | "S" | "
     orientation: "N" as const,
   }));
 }
+
+// Paletă de culori pentru notițele proprii (click-dreapta pe tabla adversarului),
+// distincte de culorile folosite deja pentru avioane/lovituri. Culoarea curentă
+// se schimbă automat (nu manual) după ce ai hașurat un avion complet (10 celule).
+const ANNOTATION_COLORS = ["#f1c40f", "#9b59b6", "#00bcd4", "#e67e22", "#e91e8c", "#2ecc71"];
+const PLANE_CELL_COUNT = getPlaneShape("N").length;
 
 /** Fulger suprapus peste avatarul unui jucător care a ieșit din sală, cât timp partida continuă. */
 function DisconnectBolt() {
@@ -52,7 +65,35 @@ export function GameRoom() {
   const [myShots, setMyShots] = useState<{ cell: Cell; status: ShotResult }[]>([]);
   const [incomingShots, setIncomingShots] = useState<{ cell: Cell; status: ShotResult }[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
+  // Avioanele adversarului, dezvăluite doar la finalul partidei, ca să-ți poți face
+  // o idee cum erau aranjate.
+  const [opponentPlanes, setOpponentPlanes] = useState<PlanePlacement[] | null>(null);
 
+  // Notițe proprii pe tabla adversarului (click-dreapta), pentru a schița unde crezi
+  // că ar putea fi avioanele lui — pur vizuale, nu au nicio legătură cu logica jocului
+  // și nu sunt trimise pe server. "row:col" -> culoarea de hașurare curentă a celulei.
+  const [annotations, setAnnotations] = useState<Record<string, string>>({});
+  const [annotationColorIndex, setAnnotationColorIndex] = useState(0);
+
+  const handleCellRightClick = (cell: Cell) => {
+    const key = `${cell.row}:${cell.col}`;
+    if (annotations[key]) {
+      // Al doilea click-dreapta pe aceeași celulă -> anulează hașurarea.
+      const next = { ...annotations };
+      delete next[key];
+      setAnnotations(next);
+      return;
+    }
+    const color = ANNOTATION_COLORS[annotationColorIndex % ANNOTATION_COLORS.length];
+    const next = { ...annotations, [key]: color };
+    setAnnotations(next);
+    // Odată ce ai hașurat un avion întreg (10 celule) cu culoarea curentă, trecem
+    // automat la următoarea culoare pentru avionul următor pe care vrei să-l trasezi.
+    const markedWithCurrentColor = Object.values(next).filter((c) => c === color).length;
+    if (markedWithCurrentColor >= PLANE_CELL_COUNT) {
+      setAnnotationColorIndex((annotationColorIndex + 1) % ANNOTATION_COLORS.length);
+    }
+  };
 
 
   useEffect(() => {
@@ -103,11 +144,15 @@ export function GameRoom() {
       if (payload.gameId !== gameId) return;
       setPhase("battle");
       setIsMyTurn(payload.firstPlayerId === playerId);
+      // Pornim cu tabla de notițe curată la fiecare luptă nouă.
+      setAnnotations({});
+      setAnnotationColorIndex(0);
     };
 
     const handleBattleShot = (payload: { gameId: string; byPlayerId: string; cell: Cell; result: ShotResult }) => {
       if (payload.gameId !== gameId) return;
       const entry = { cell: payload.cell, status: payload.result };
+      playShotSound(payload.result);
       if (payload.byPlayerId === playerId) {
         setMyShots((prev) => [...prev, entry]);
         // Fiecare joacă o singură mutare pe rând, indiferent de rezultat.
@@ -118,11 +163,14 @@ export function GameRoom() {
       }
     };
 
-    const handleBattleOver = (payload: { gameId: string; winnerId: string }) => {
+    const handleBattleOver = (payload: { gameId: string; winnerId: string; planes: Record<string, PlanePlacement[]> }) => {
       if (payload.gameId !== gameId) return;
       setPhase("over");
       setWinner(payload.winnerId);
+      const opponentId = Object.keys(payload.planes).find((id) => id !== playerId);
+      if (opponentId) setOpponentPlanes(payload.planes[opponentId]);
       const iWon = payload.winnerId === playerId;
+      if (iWon) playCrowdWinSound(); else playCrowdLoseSound();
       pushActivity({ playerId, type: iWon ? "won" : "lost", at: Date.now() });
     };
 
@@ -138,6 +186,7 @@ export function GameRoom() {
       winnerId: string | null;
       myShots: { cell: Cell; result: ShotResult }[];
       incomingShots: { cell: Cell; result: ShotResult }[];
+      opponentPlanes: PlanePlacement[] | null;
     }) => {
       if (payload.gameId !== gameId) return;
 
@@ -147,6 +196,7 @@ export function GameRoom() {
         setMyShots(payload.myShots.map((s) => ({ cell: s.cell, status: s.result })));
         setIncomingShots(payload.incomingShots.map((s) => ({ cell: s.cell, status: s.result })));
         setWinner(payload.winnerId);
+        if (payload.opponentPlanes) setOpponentPlanes(payload.opponentPlanes);
         setPhase("over");
         return;
       }
@@ -231,6 +281,50 @@ export function GameRoom() {
     setDraggingTrayId(null);
   };
 
+  // Aranjează cele 3 avioane aleatoriu pe tablă (poziție + orientare la întâmplare),
+  // fără suprapuneri și fără să iasă de pe grid. Încearcă cu reveniri (backtracking
+  // simplificat prin reluare completă) până găsește o combinație validă pentru toate.
+  const ORIENTATIONS: PlaneOrientation[] = ["N", "E", "S", "W"];
+
+  const handleRandomPlacement = () => {
+    const MAX_RESTARTS = 200;
+    const MAX_TRIES_PER_PLANE = 300;
+
+    for (let restart = 0; restart < MAX_RESTARTS; restart++) {
+      const result: PlanePlacement[] = [];
+      let allPlaced = true;
+
+      for (let i = 0; i < TOTAL_PLANES_PER_PLAYER; i++) {
+        let placed = false;
+        for (let tries = 0; tries < MAX_TRIES_PER_PLANE; tries++) {
+          const orientation = ORIENTATIONS[Math.floor(Math.random() * ORIENTATIONS.length)];
+          const head: Cell = {
+            row: Math.floor(Math.random() * BOARD_SIZE),
+            col: Math.floor(Math.random() * BOARD_SIZE),
+          };
+          const candidate: PlanePlacement = { id: `tray-${i}`, head, orientation };
+          const occupied = getOccupiedCellKeys(result);
+          if (isValidPlanePlacement(candidate, occupied)) {
+            result.push(candidate);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          allPlaced = false;
+          break;
+        }
+      }
+
+      if (allPlaced) {
+        setPlacedPlanes(result);
+        setTrayPlanes([]);
+        setDraggingTrayId(null);
+        return;
+      }
+    }
+  };
+
   const draggingTrayOrientation = draggingTrayId
     ? trayPlanes.find((p) => p.id === draggingTrayId)?.orientation
     : undefined;
@@ -279,6 +373,7 @@ export function GameRoom() {
                 <PlaneTray
                   planes={trayPlanes}
                   onDragStart={setDraggingTrayId}
+                  onDragEnd={() => setDraggingTrayId(null)}
                   onRotate={handleRotateTrayPlane}
                 />
                 {placedPlanes.length > 0 && (
@@ -295,13 +390,18 @@ export function GameRoom() {
                 >
                   Gata
                 </button>
-                <button
-                  className="clear-board-button"
-                  disabled={placedPlanes.length === 0}
-                  onClick={handleClearBoard}
-                >
-                  Golește tabla
-                </button>
+                <div className="board-actions-row">
+                  <button
+                    className="clear-board-button"
+                    disabled={placedPlanes.length === 0}
+                    onClick={handleClearBoard}
+                  >
+                    Golește tabla
+                  </button>
+                  <button className="random-placement-button" onClick={handleRandomPlacement}>
+                    Aranjare aleatorie
+                  </button>
+                </div>
               </>
             )}
 
@@ -334,7 +434,12 @@ export function GameRoom() {
                     {!isMyTurn && <span className="turn-hourglass">⏳</span>}
                   </span>
                 </div>
-                <Board onCellClick={handleShootOpponent} markedCells={myShots} />
+                <Board
+                  onCellClick={handleShootOpponent}
+                  markedCells={myShots}
+                  annotations={annotations}
+                  onCellRightClick={handleCellRightClick}
+                />
               </>
             )}
 
@@ -349,7 +454,7 @@ export function GameRoom() {
                   </span>
                   <span className="board-title__name-row">Adversarul</span>
                 </div>
-                <Board markedCells={myShots} />
+                <Board markedCells={myShots} planes={opponentPlanes ?? []} annotations={annotations} />
               </>
             )}
           </div>

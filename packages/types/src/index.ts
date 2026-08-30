@@ -61,6 +61,10 @@ export interface ServerToClientEvents {
   "room:state": (payload: { gameId: string; playerIds: string[] }) => void;
   "room:activity": (payload: { gameId: string; playerId: string; type: "joined" | "left"; at: number }) => void;
 
+  // Numărul total de utilizatori conectați la site în acest moment (nu doar
+  // cei dintr-o sală anume) — afișat în bara de navigare.
+  "presence:onlineCount": (payload: { count: number }) => void;
+
   "game:state": (state: GameState) => void;
   "game:error": (payload: { message: string }) => void;
 
@@ -69,7 +73,13 @@ export interface ServerToClientEvents {
   // Ambii jucători sunt gata -> începe lupta; se alege aleator cine mută primul.
   "battle:started": (payload: { gameId: string; firstPlayerId: string }) => void;
   "battle:shot": (payload: { gameId: string; byPlayerId: string; cell: Cell; result: ShotResult }) => void;
-  "battle:over": (payload: { gameId: string; winnerId: string }) => void;
+  "battle:over": (payload: {
+    gameId: string;
+    winnerId: string;
+    // Avioanele ambilor jucători (indexate după playerId), dezvăluite la finalul
+    // partidei, ca fiecare jucător să vadă cum era aranjată tabla adversarului.
+    planes: Record<string, PlanePlacement[]>;
+  }) => void;
   // Trimis jucătorului care (re)intră într-o sală, ca să-și poată reconstrui local
   // starea jocului aflat deja în desfășurare (dacă a ieșit și a revenit, de exemplu).
   "battle:sync": (payload: {
@@ -81,5 +91,7 @@ export interface ServerToClientEvents {
     winnerId: string | null;
     myShots: Shot[];
     incomingShots: Shot[];
+    // Avioanele adversarului, populate doar dacă jocul s-a terminat deja (altfel `null`).
+    opponentPlanes: PlanePlacement[] | null;
   }) => void;
 }

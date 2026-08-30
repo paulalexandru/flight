@@ -30,7 +30,7 @@ body {
   width: 172px;
   flex-shrink: 0;
   background: #1e1c1a;
-  padding: 24px 16px;
+  padding: 24px 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -38,7 +38,9 @@ body {
 }
 
 .app-sidebar__logo {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 22px;
   font-weight: 700;
   color: #81b64c;
@@ -46,6 +48,12 @@ body {
   margin: 0 0 24px 4px;
   letter-spacing: 0.5px;
   cursor: pointer;
+}
+
+.app-sidebar__logo-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .app-sidebar__logo:hover {
@@ -61,11 +69,20 @@ body {
 .app-sidebar__link {
   color: #b8b6b3;
   text-decoration: none;
-  padding: 10px 12px;
+  padding: 10px 10px 10px 10px;
   border-radius: 6px;
   font-size: 15px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar__link-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .app-sidebar__link:hover {
@@ -78,22 +95,36 @@ body {
   color: #81b64c;
 }
 
+.app-sidebar__online-count {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #8c8a86;
+}
+
+.app-sidebar__online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #81b64c;
+  box-shadow: 0 0 4px #81b64c;
+  flex-shrink: 0;
+}
+
 /* Zona centrala de lucru - fundal mai deschis, ca sa se diferentieze clar de meniu */
 .app-content {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
   background: #302e2b;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: flex-start;
-  padding: 48px 0 48px 100px;
+  padding: 48px 24px;
   overflow-x: auto;
-}
-
-/* Coloană rezervată pe viitor pentru reclame (goală momentan). */
-.app-ads-col {
-  flex: 0 0 240px;
-  background: #302e2b;
+  container-type: inline-size;
 }
 
 .work-panel {
@@ -180,14 +211,18 @@ body {
 
 /* Sala de joc: coloana principala (stanga) + coloana ingusta de informatii (dreapta) */
 .game-room {
-  width: fit-content;
+  width: 100%;
+  min-width: 0;
   display: flex;
-  gap: 40px;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 20px;
   align-items: stretch;
 }
 
 .game-room__main {
-  flex: 0 0 auto;
+  flex: 1 1 860px;
+  min-width: 0;
   text-align: center;
 }
 
@@ -200,13 +235,19 @@ body {
 .game-room__work-row {
   display: flex;
   gap: 20px;
+  width: 100%;
   text-align: left;
   align-items: stretch;
 }
 
+/* Cele doua griduri raman mereu egale intre ele (aceeasi latime/inaltime).
+   flex-shrink mic fata de sidebar, ca sa nu inceapa sa se micsoreze decat
+   dupa ce sidebarul a ajuns deja la minimul lui. */
 .game-room__board-col,
 .game-room__extra-col {
-  min-width: 0;
+  min-width: 326px;
+  max-width: 420px;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -216,13 +257,7 @@ body {
 }
 
 .game-room__board-col {
-  flex: 0 0 auto;
-  justify-content: flex-start;
-}
-
-.game-room__extra-col {
-  flex: 0 0 calc(var(--cell-size) * 10 + 32px);
-  width: calc(var(--cell-size) * 10 + 32px);
+  justify-content: center;
 }
 
 .board-grid {
@@ -255,6 +290,12 @@ body {
   color: #8a8783;
   font-size: 13px;
   font-style: italic;
+}
+
+.plane-tray__hint {
+  color: #8a8783;
+  font-size: 13px;
+  margin: 0 0 12px 0;
 }
 
 .plane-tray__list {
@@ -329,7 +370,7 @@ body {
 }
 
 .clear-board-button {
-  margin-top: 20px;
+  margin-top: 0;
   padding: 12px 18px;
   font-size: 15px;
   font-weight: 600;
@@ -338,7 +379,6 @@ body {
   background: transparent;
   color: #d0cec9;
   cursor: pointer;
-  align-self: flex-start;
 }
 
 .clear-board-button:hover:not(:disabled) {
@@ -349,6 +389,70 @@ body {
   color: #6b6864;
   border-color: #4a4642;
   cursor: not-allowed;
+}
+
+.board-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  align-self: flex-start;
+}
+
+.random-placement-button {
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #4a7db8;
+  background: transparent;
+  color: #8fbfef;
+  cursor: pointer;
+}
+
+.random-placement-button:hover {
+  background: #2a3a4a;
+}
+
+.difficulty-select {
+  width: 100%;
+}
+
+.difficulty-select__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.difficulty-select__button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #4a4642;
+  background: #201f1c;
+  color: #e5e5e5;
+  cursor: pointer;
+  text-align: left;
+}
+
+.difficulty-select__button:hover {
+  border-color: #6aa84f;
+  background: #26261f;
+}
+
+.difficulty-select__label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.difficulty-select__description {
+  font-size: 12px;
+  color: #b8b6b3;
 }
 
 .waiting-panel {
@@ -366,6 +470,27 @@ body {
   justify-content: flex-start;
   width: 100%;
   text-align: left;
+}
+
+.annotation-palette {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.annotation-palette__label {
+  font-size: 13px;
+  color: #a8a49e;
+}
+
+.annotation-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
 }
 
 .board-title__name-row {
@@ -420,8 +545,10 @@ body {
 
 
 .game-room__sidebar {
-  width: 360px;
-  flex-shrink: 0;
+  flex: 1 1 320px;
+  flex-shrink: 1000;
+  min-width: 300px;
+  max-width: 320px;
   background: #201f1c;
   border-radius: 12px;
   padding: 20px;
@@ -430,10 +557,129 @@ body {
   flex-direction: column;
 }
 
+/* Peste 1418px latime a ecranului, cele 3 coloane raman fixe la maximul lor
+   (420px + 420px grid-urile, 320px sidebarul), fara nicio micsorare. */
+@media (min-width: 1419px) {
+  .game-room__main {
+    flex: 0 0 860px;
+  }
+
+  .game-room__board-col,
+  .game-room__extra-col {
+    flex: 0 0 420px;
+  }
+
+  .game-room__sidebar {
+    flex: 0 0 320px;
+  }
+}
+
+/* Intre 1398px si 1418px latime a ecranului: gridurile raman neatinse la
+   420px fiecare, doar sidebarul se micsoreaza, de la 320px pana la 300px. */
+@media (min-width: 1399px) and (max-width: 1418px) {
+  .game-room__main {
+    flex: 0 0 860px;
+  }
+
+  .game-room__board-col,
+  .game-room__extra-col {
+    flex: 0 0 420px;
+  }
+
+  .game-room__sidebar {
+    flex: 1 1 320px;
+    flex-shrink: 1;
+  }
+}
+
+/* Intre 1103px si 1398px latime a ecranului: sidebarul ramane fixat la
+   minimul lui (300px), iar gridurile se micsoreaza impreuna, de la
+   420px pana la minimul lor (326px fiecare). */
+@media (min-width: 1103px) and (max-width: 1398px) {
+  .game-room__main {
+    flex: 1 1 860px;
+    min-width: 672px;
+  }
+
+  .game-room__board-col,
+  .game-room__extra-col {
+    flex: 1 1 0;
+  }
+
+  .game-room__sidebar {
+    flex: 0 0 300px;
+  }
+}
+
+/* Sub 1103px, sidebarul nu mai incape pe acelasi rand si sare pe linia de
+   dedesubt (centrat). */
+@media (max-width: 1102px) {
+  .game-room {
+    flex-wrap: wrap;
+  }
+}
+
+/* Intre 971px si 1102px: gridurile raman la maximul lor (420px fiecare,
+   860px game-room__work-row in total), sidebarul e deja pe linia de sub. */
+@media (min-width: 971px) and (max-width: 1102px) {
+  .game-room__main {
+    flex: 0 0 860px;
+  }
+
+  .game-room__board-col,
+  .game-room__extra-col {
+    flex: 0 0 420px;
+  }
+
+  .game-room__sidebar {
+    flex: 0 0 320px;
+  }
+}
+
+/* Intre 784px si 970px: gridurile se micsoreaza impreuna, de la 420px pana
+   la minimul lor (326px fiecare), game-room__work-row scade de la 860px
+   la 672px. Sidebarul ramane pe linia de sub. */
+@media (min-width: 784px) and (max-width: 970px) {
+  .game-room__main {
+    flex: 1 1 860px;
+    min-width: 672px;
+  }
+
+  .game-room__board-col,
+  .game-room__extra-col {
+    flex: 1 1 0;
+  }
+
+  .game-room__sidebar {
+    flex: 0 0 320px;
+  }
+}
+
+/* Sub 784px: cele doua griduri nu mai incap unul langa altul si se pun
+   unul sub altul. */
+@media (max-width: 783px) {
+  .game-room__work-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .game-room__board-col,
+  .game-room__extra-col {
+    width: 100%;
+    max-width: 420px;
+  }
+}
+
+
 .game-room__sidebar-heading {
   margin: 0 0 16px 0;
   color: #fff;
   font-size: 18px;
+}
+
+.game-room__difficulty-tag {
+  color: #81b64c;
+  font-weight: 600;
 }
 
 .game-room__sidebar-title {
@@ -496,82 +742,54 @@ body {
 
 /* ---------- Responsive breakpoints ---------- */
 
-/* Ecrane medii: reduce padding-ul lateral, coloana de reclame devine mai ingusta */
-@media (max-width: 1850px) {
-  .app-content {
-    padding-left: 48px;
-  }
-
-  .app-ads-col {
-    min-width: 0;
-    flex: 0 0 0px;
-    width: 0;
-    overflow: hidden;
-  }
-}
-
 /* Grid-urile si sidebarul de notificari se micsoreaza FLUID (proportional cu latimea ferestrei),
    pastrand acelasi raport ca la ~1850px, fara salturi intre rezolutii */
 :root {
   --cell-size: clamp(24px, 2.27vw, 42px);
 }
 
-.game-room__sidebar {
-  width: clamp(220px, 19.46vw, 360px);
-}
 
-/* Tablete: meniul lateral se ingusteaza la iconite, sidebarul de notificari e mai mic */
-@media (max-width: 1100px) {
+/* De la 1250px in jos: meniul lateral se ingusteaza la iconite (fara text), ca sa
+   ramana loc mai mult pentru zona de joc. */
+@media (max-width: 1250px) {
   .app-sidebar {
-    width: 72px;
+    width: 64px;
     padding: 24px 8px;
   }
 
   .app-sidebar__logo {
     font-size: 18px;
-    text-align: center;
+    justify-content: center;
+  }
+
+  .app-sidebar__logo-text {
+    display: none;
   }
 
   .app-sidebar__link {
-    font-size: 12px;
-    padding: 8px 4px;
-    text-align: center;
+    justify-content: center;
+    padding: 10px 4px;
+  }
+
+  .app-sidebar__link-label {
+    display: none;
+  }
+
+  .app-sidebar__link-icon {
+    font-size: 20px;
+  }
+
+  .app-sidebar__online-count {
+    justify-content: center;
+    padding: 10px 4px;
+  }
+
+  .app-sidebar__online-text {
+    display: none;
   }
 
   .app-content {
     padding: 32px 24px;
-  }
-
-  .game-room {
-    width: 100%;
-  }
-}
-
-/* Ecrane inguste: coloanele din game-room se pun una sub alta (inainte sa nu mai incapa pe orizontala) */
-@media (max-width: 950px) {
-  :root {
-    --cell-size: clamp(28px, 8vw, 38px);
-  }
-
-  .game-room {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .game-room__work-row {
-    flex-direction: column;
-  }
-
-  .game-room__board-col,
-  .game-room__extra-col {
-    width: 100%;
-    max-width: calc(var(--cell-size) * 10 + 32px);
-    flex: 1 1 auto;
-  }
-
-  .game-room__sidebar {
-    width: 100%;
-    max-width: calc(var(--cell-size) * 10 + 32px);
   }
 }
 

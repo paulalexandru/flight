@@ -27,3 +27,27 @@ export function getRoomRoster(gameId: string): string[] {
 export function isPlayerInRoom(gameId: string, playerId: string): boolean {
   return gameRosters.get(gameId)?.has(playerId) ?? false;
 }
+
+/**
+ * Numărul de conexiuni socket active pentru fiecare playerId (id stabil, nu
+ * socket.id) — un jucător cu mai multe tab-uri/dispozitive deschise numără o
+ * singură dată în totalul de utilizatori online.
+ */
+const connectionsByPlayer = new Map<string, number>();
+
+export function registerConnection(playerId: string): void {
+  connectionsByPlayer.set(playerId, (connectionsByPlayer.get(playerId) ?? 0) + 1);
+}
+
+export function unregisterConnection(playerId: string): void {
+  const count = connectionsByPlayer.get(playerId) ?? 0;
+  if (count <= 1) {
+    connectionsByPlayer.delete(playerId);
+  } else {
+    connectionsByPlayer.set(playerId, count - 1);
+  }
+}
+
+export function getOnlineUsersCount(): number {
+  return connectionsByPlayer.size;
+}
