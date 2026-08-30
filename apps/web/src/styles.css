@@ -304,36 +304,43 @@ body {
   gap: 16px;
 }
 
-.plane-tray__current {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
 .plane-tray__item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  background: #2b2a27;
-  border-radius: 8px;
-  padding: 10px;
+  gap: 12px;
+  width: 100%;
   cursor: grab;
 }
 
+.plane-tray__preview-box {
+  /* fara fundal - doar forma avionului conteaza vizual, fara cutie gri in jur */
+}
+
+.plane-tray__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
 .plane-tray__count {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 700;
   color: #b8b6b3;
 }
 
 .plane-tray__rotate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #3d3a36;
   color: #e5e5e5;
-  border: none;
+  border: 1px solid #5a5652;
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 8px 14px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -346,8 +353,8 @@ body {
 }
 
 .ready-button {
-  margin-top: 20px;
-  margin-right: 10px;
+  margin-top: 16px;
+  width: 100%;
   padding: 12px 18px;
   font-size: 15px;
   font-weight: 600;
@@ -356,7 +363,6 @@ body {
   background: #6aa84f;
   color: #fff;
   cursor: pointer;
-  align-self: flex-start;
 }
 
 .ready-button:hover:not(:disabled) {
@@ -370,7 +376,7 @@ body {
 }
 
 .clear-board-button {
-  margin-top: 0;
+  flex: 1;
   padding: 12px 18px;
   font-size: 15px;
   font-weight: 600;
@@ -395,10 +401,11 @@ body {
   display: flex;
   gap: 10px;
   margin-top: 20px;
-  align-self: flex-start;
+  width: 100%;
 }
 
 .random-placement-button {
+  flex: 1;
   padding: 12px 18px;
   font-size: 15px;
   font-weight: 600;

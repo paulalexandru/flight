@@ -383,14 +383,10 @@ export function GameRoom() {
                     </p>
                   </div>
                 )}
-                <button
-                  className="ready-button"
-                  disabled={trayPlanes.length > 0}
-                  onClick={handleConfirmPlacement}
-                >
-                  Gata
-                </button>
                 <div className="board-actions-row">
+                  <button className="random-placement-button" onClick={handleRandomPlacement}>
+                    Aranjare aleatorie
+                  </button>
                   <button
                     className="clear-board-button"
                     disabled={placedPlanes.length === 0}
@@ -398,10 +394,14 @@ export function GameRoom() {
                   >
                     Golește tabla
                   </button>
-                  <button className="random-placement-button" onClick={handleRandomPlacement}>
-                    Aranjare aleatorie
-                  </button>
                 </div>
+                <button
+                  className="ready-button"
+                  disabled={trayPlanes.length > 0}
+                  onClick={handleConfirmPlacement}
+                >
+                  Gata
+                </button>
               </>
             )}
 
