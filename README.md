@@ -29,7 +29,9 @@ packages/
    ```bash
    npm run db:up
    ```
-3. Copiază `.env.example` în `.env` în `apps/server` și ajustează dacă e nevoie.
+3. Copiază `.env.example` în `.env` în `apps/server`. Pentru acces din rețeaua locală,
+   adaugă la `CLIENT_ORIGIN` adresa IP a calculatorului pe portul `5173` (de exemplu
+   `http://192.168.50.180:5173`).
 4. Pornește server + web în paralel:
    ```bash
    npm run dev
