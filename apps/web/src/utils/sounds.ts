@@ -1,7 +1,7 @@
-// Un singur sunet ("tap" de piesă pusă pe tablă de lemn, gen chess.com) redat
-// pentru loviturile normale ("hit"/"miss"/"sunk"), plus un sunet special,
-// mai puternic (impact + ping metalic), redat exact atunci când e lovit
-// capul avionului ("head") - lovitura care îl scoate definitiv din joc.
+// Sunet distinct pentru fiecare tip de lovitură: "tap" simplu de lemn la
+// ratare, ciocan metalic la lovirea corpului unui avion, plus un sunet
+// special, mai puternic (impact + ping metalic), redat exact atunci când e
+// lovit capul avionului ("head") - lovitura care îl scoate definitiv din joc.
 //
 // Fișierele sunt deja clipuri scurte, deci le redăm integral, fără nicio
 // tăiere manuală. Folosim un mic pool de elemente <audio> reutilizate (în loc
@@ -9,18 +9,22 @@
 // rapide/succesive să nu se blocheze una pe alta.
 
 import moveUrl from "../assets/sounds/move.wav";
+import hitBodyUrl from "../assets/sounds/metal-hammer-hit.mp3";
 import hitHeadUrl from "../assets/sounds/hit-head.wav";
-import crowdWinUrl from "../assets/sounds/crowd-win.wav";
-import crowdLoseUrl from "../assets/sounds/crowd-lose.wav";
+import crowdLoseUrl from "../assets/sounds/crowd-lose.mp3";
+import victoryTrumpetUrl from "../assets/sounds/victory-trumpet.mp3";
 
 type ShotResultLike = "hit" | "miss" | "sunk" | "head";
 
 const VOLUME = 0.4;
+const HIT_BODY_VOLUME = 0.5;
 const HEAD_VOLUME = 0.55;
 const POOL_SIZE = 6;
 
 let pool: HTMLAudioElement[] = [];
 let poolIndex = 0;
+let hitBodyPool: HTMLAudioElement[] = [];
+let hitBodyPoolIndex = 0;
 let headPool: HTMLAudioElement[] = [];
 let headPoolIndex = 0;
 
@@ -37,6 +41,19 @@ function getPool(): HTMLAudioElement[] {
   return pool;
 }
 
+function getHitBodyPool(): HTMLAudioElement[] {
+  if (typeof Audio === "undefined") return [];
+  if (hitBodyPool.length === 0) {
+    hitBodyPool = Array.from({ length: POOL_SIZE }, () => {
+      const audio = new Audio(hitBodyUrl);
+      audio.preload = "auto";
+      audio.volume = HIT_BODY_VOLUME;
+      return audio;
+    });
+  }
+  return hitBodyPool;
+}
+
 function getHeadPool(): HTMLAudioElement[] {
   if (typeof Audio === "undefined") return [];
   if (headPool.length === 0) {
@@ -50,7 +67,7 @@ function getHeadPool(): HTMLAudioElement[] {
   return headPool;
 }
 
-/** Sunetul redat la orice mutare (ochit, ratat sau lovitură fatală). */
+/** Sunetul redat exclusiv la o mutare ratată ("miss"). */
 export function playMoveSound() {
   const instances = getPool();
   if (instances.length === 0) return;
@@ -60,6 +77,18 @@ export function playMoveSound() {
   audio.play().catch(() => {
     // Browserul poate refuza redarea automată dacă utilizatorul nu a
     // interacționat încă deloc cu pagina - ignorăm eroarea, nu e critică.
+  });
+}
+
+/** Sunetul redat când e lovit corpul unui avion ("hit"/"sunk", fără cap). */
+export function playHitBodySound() {
+  const instances = getHitBodyPool();
+  if (instances.length === 0) return;
+  const audio = instances[hitBodyPoolIndex];
+  hitBodyPoolIndex = (hitBodyPoolIndex + 1) % instances.length;
+  audio.currentTime = 0;
+  audio.play().catch(() => {
+    // Browserul poate refuza redarea automată - ignorăm eroarea.
   });
 }
 
@@ -80,7 +109,11 @@ export function playShotSound(result: ShotResultLike) {
     playHeadHitSound();
     return;
   }
-  playMoveSound();
+  if (result === "miss") {
+    playMoveSound();
+    return;
+  }
+  playHitBodySound();
 }
 
 // Sunete de public redate la finalul jocului: aplauze/urale ("ieiii") la
@@ -97,12 +130,13 @@ function playOneShot(url: string) {
   });
 }
 
-/** Redă sunetul de public mulțumit ("ieiii") când jucătorul câștigă meciul. */
-export function playCrowdWinSound() {
-  playOneShot(crowdWinUrl);
-}
-
 /** Redă sunetul de public dezamăgit ("oooo"/"aaaa") când jucătorul pierde meciul. */
 export function playCrowdLoseSound() {
   playOneShot(crowdLoseUrl);
+}
+
+/** Redă un clopoțel de "achievement" la victorie - singurul sunet folosit
+ * pentru momentul de câștig. */
+export function playVictoryTrumpetSound() {
+  playOneShot(victoryTrumpetUrl);
 }

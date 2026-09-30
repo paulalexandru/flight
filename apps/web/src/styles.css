@@ -99,8 +99,10 @@ body {
   margin-top: auto;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 10px 12px;
+  padding: 10px 12px 0;
+  margin-bottom: 0;
   font-size: 12px;
   color: #8c8a86;
 }
@@ -161,10 +163,156 @@ body {
   background: #9ccc65;
 }
 
+.play-now-button:disabled,
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background: #81b64c;
+}
+
 .status-text {
   color: #b8b6b3;
   font-size: 16px;
   margin-top: 16px;
+}
+
+.status-text--error {
+  color: #e0655a;
+}
+
+/* Lobby (pagina principala): coloanele de meciuri/jucatori afiseaza liste
+   aliniate la stanga, cu inaltime fixa suficienta pentru exact 10 randuri —
+   peste acest numar, lista trece pe pagini (vezi .lobby-pager) in loc sa
+   creasca tabla in sine. */
+.game-room__board-col--list,
+.game-room__extra-col--list {
+  align-items: stretch;
+  overflow: hidden;
+  min-height: 0;
+  /* Titlul trebuie să rămână sus de tot (ca la coloana din dreapta), nu
+     centrat vertical ca la tabla de joc obișnuită. */
+  justify-content: flex-start;
+}
+
+.game-room__board-col--list .game-room__sidebar-title,
+.game-room__extra-col--list .game-room__sidebar-title {
+  text-align: center;
+  width: 100%;
+}
+
+.game-room__board-col--list .status-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+}
+
+.lobby-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  /* Lista are mereu exact 8 randuri (completate cu placeholder daca lipsesc
+     inregistrari), asa ca inaltimea rezulta natural din continut - nu se
+     foloseste o inaltime fixa, ca sa nu taie randul al 8-lea din greseala. */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lobby-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #2a2926;
+  border-radius: 6px;
+  padding: 10px 12px;
+  min-height: 46px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.lobby-list__row--empty {
+  background: #242320;
+}
+
+.lobby-list__number {
+  color: #8c8a86;
+  font-size: 13px;
+  font-weight: 600;
+  width: 20px;
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.lobby-list__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.lobby-list__title {
+  color: #fff;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lobby-list__title--empty {
+  color: #5c5a57;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.lobby-list__subtitle {
+  color: #b8b6b3;
+  font-size: 13px;
+}
+
+.lobby-list__action {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.lobby-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.lobby-pager__button {
+  background: #2a2926;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.lobby-pager__button:hover:not(:disabled) {
+  background: #3a3936;
+}
+
+.lobby-pager__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.lobby-pager__label {
+  color: #b8b6b3;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .player-list {
@@ -209,6 +357,51 @@ body {
   color: #81b64c;
 }
 
+.rules-panel {
+  max-width: 760px;
+  text-align: left;
+}
+
+.rules-panel > .status-text {
+  text-align: left;
+}
+
+.rules-section {
+  margin-top: 28px;
+}
+
+.rules-section h2 {
+  color: #81b64c;
+  font-size: 18px;
+  margin: 0 0 10px 0;
+}
+
+.rules-section p {
+  color: #d8d6d3;
+  line-height: 1.6;
+  margin: 0 0 8px 0;
+}
+
+.rules-section ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #d8d6d3;
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rules-plane-shape {
+  background: #1e1c1a;
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: #b8b6b3;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
 /* Sala de joc: coloana principala (stanga) + coloana ingusta de informatii (dreapta) */
 .game-room {
   width: 100%;
@@ -227,8 +420,9 @@ body {
 }
 
 .game-room__main h2 {
-  margin-top: 0;
+  margin: 0 0 16px 0;
   color: #fff;
+  font-size: 18px;
 }
 
 /* Rand de lucru sub textul de status: tabla de joc (stanga) + coloana libera (dreapta), egale */
@@ -254,6 +448,26 @@ body {
   background: #201f1c;
   border-radius: 8px;
   padding: 16px;
+}
+
+.game-room__extra-col--centered {
+  justify-content: center;
+}
+
+.waiting-timer-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waiting-timer-big {
+  font-size: 42px;
+  font-weight: 700;
+  color: #e67e22;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .game-room__board-col {
@@ -298,6 +512,51 @@ body {
   margin: 0 0 12px 0;
 }
 
+.placement-cancelled-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 32px 24px;
+}
+
+.placement-cancelled-panel__icon {
+  font-size: 32px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.placement-cancelled-panel__title {
+  margin: 0;
+  color: #e5e5e5;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.placement-cancelled-panel__text {
+  margin: 0;
+  color: #a8a5a1;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.placement-cancelled-panel__button {
+  margin-top: 10px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  background: #81b64c;
+  color: #1c1c1a;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.placement-cancelled-panel__button:hover {
+  background: #93cc59;
+}
+
 .plane-tray__list {
   display: flex;
   flex-wrap: wrap;
@@ -313,15 +572,24 @@ body {
   cursor: grab;
 }
 
+.plane-tray__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
 .plane-tray__preview-box {
   /* fara fundal - doar forma avionului conteaza vizual, fara cutie gri in jur */
+  flex-shrink: 0;
 }
 
 .plane-tray__controls {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .plane-tray__count {
@@ -373,6 +641,23 @@ body {
   background: #55524d;
   color: #a8a49e;
   cursor: not-allowed;
+}
+
+.sidebar-rematch-button {
+  margin: 12px 0 0 0;
+  width: 100%;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  background: #6aa84f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.sidebar-rematch-button:hover {
+  background: #5c9542;
 }
 
 .clear-board-button {
@@ -468,6 +753,7 @@ body {
 }
 
 .board-title {
+  position: relative;
   font-weight: 600;
   margin: 0 0 12px;
   display: flex;
@@ -504,6 +790,44 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.board-title__name-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-title__timers-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placement-timer,
+.battle-clock {
+  font-weight: 600;
+  font-size: 14px;
+  color: #a8a49e;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.placement-timer {
+  color: #e67e22;
+}
+
+.forfeit-timer {
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffd400;
+  font-variant-numeric: tabular-nums;
+}
+
+.battle-clock--active {
+  color: #2ecc71;
 }
 
 .waiting-hint {
@@ -556,12 +880,19 @@ body {
   flex-shrink: 1000;
   min-width: 300px;
   max-width: 320px;
+  min-height: 0;
+  /* Limitează sidebarul la înălțimea vizibilă a ecranului (minus padding-ul
+     zonei de conținut), astfel încât jurnalul de activitate să facă scroll
+     intern (.activity-log are overflow-y: auto) în loc să împingă tot
+     conținutul în afara ecranului atunci când sunt multe notificări. */
+  max-height: calc(100vh - 96px);
   background: #201f1c;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Peste 1418px latime a ecranului, cele 3 coloane raman fixe la maximul lor
@@ -624,6 +955,11 @@ body {
   .game-room {
     flex-wrap: wrap;
   }
+
+  .game-room__sidebar {
+    height: auto !important;
+    max-height: none !important;
+  }
 }
 
 /* Intre 971px si 1102px: gridurile raman la maximul lor (420px fiecare,
@@ -684,9 +1020,141 @@ body {
   font-size: 18px;
 }
 
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lobby-actions .play-now-button {
+  width: 100%;
+  padding: 14px 20px;
+}
+
+.challenge-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.challenge-dialog {
+  position: relative;
+  background: #201f1c;
+  border-radius: 12px;
+  padding: 28px 32px;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.challenge-dialog__close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #b8b6b3;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.challenge-dialog__close:hover {
+  color: #fff;
+}
+
+.challenge-dialog__title {
+  margin: 0 0 12px 0;
+  color: #fff;
+}
+
+.challenge-dialog__text {
+  color: #e5e5e5;
+  margin: 0 0 8px 0;
+}
+
+.challenge-dialog__countdown {
+  color: #b8b6b3;
+  font-size: 14px;
+  margin: 0 0 20px 0;
+}
+
+.challenge-dialog__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.challenge-dialog__decline {
+  background: #3a3936;
+  color: #fff;
+  border: none;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.challenge-dialog__decline:hover {
+  background: #4a4946;
+}
+
+.game-over-dialog__text {
+  margin-bottom: 20px;
+}
+
+.game-over-dialog__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.game-over-dialog__actions button {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.game-over-dialog__primary {
+  background: #81b64c;
+  color: #1e1c1a;
+}
+
+.game-over-dialog__primary:hover {
+  background: #9ccc65;
+}
+
+.game-over-dialog__secondary {
+  background: #3a3936;
+  color: #fff;
+}
+
+.game-over-dialog__secondary:hover {
+  background: #4a4946;
+}
+
 .game-room__difficulty-tag {
   color: #81b64c;
   font-weight: 600;
+}
+
+.game-room__total-score {
+  margin: -8px 0 16px 0;
+  color: #a8a49e;
+  font-size: 12px;
 }
 
 .game-room__sidebar-title {
@@ -695,6 +1163,33 @@ body {
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.game-room__sidebar > .game-room__sidebar-title {
+  text-align: center;
+  width: 100%;
+  margin-top: -4px;
+}
+
+.player-score-badge {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 32px;
+  padding: 0;
+  border-radius: 5px;
+  border: 1px solid #e6e4df;
+  background: #f5f4f1;
+  color: #2b2a28;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
 }
 
 .activity-log {
@@ -706,6 +1201,7 @@ body {
   gap: 6px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .activity-log__empty {
@@ -745,6 +1241,94 @@ body {
 
 .activity-log__action {
   color: #8a8783;
+}
+
+.chat-box {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #33322f;
+}
+
+.chat-box__log {
+  flex: 0 0 auto;
+  /* Inaltime fixa pentru exact 4 randuri de mesaj (18px inaltime de rand +
+     4px gap intre ele), ca sa nu se lungeasca mai tare - peste 4 mesaje
+     vizibile, lista scroleaza intern. */
+  height: calc(4 * 18px + 3 * 4px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.chat-box__empty {
+  color: #6b6864;
+  font-size: 13px;
+  font-style: italic;
+  margin: 0;
+}
+
+.chat-box__message {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: #d0cec9;
+  word-break: break-word;
+}
+
+.chat-box__author {
+  color: #81b64c;
+  font-weight: 600;
+}
+
+.chat-box__form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.chat-box__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: #2b2a27;
+  border: 1px solid #3d3a36;
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.chat-box__input:focus {
+  outline: none;
+  border-color: #81b64c;
+}
+
+.chat-box__send {
+  flex: 0 0 auto;
+  background: #81b64c;
+  color: #1a1a17;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.chat-box__send:hover {
+  background: #9ccc65;
+}
+
+.chat-box__send:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background: #81b64c;
 }
 
 /* ---------- Responsive breakpoints ---------- */
@@ -831,5 +1415,132 @@ body {
 
   .work-panel {
     padding: 24px;
+  }
+}
+
+/* Pagina de Puzzle: o singura tabla, patrata, cat mai inalta posibil (folosind
+   toata inaltimea disponibila a ecranului), plus coloana de notificari de
+   aceeasi inaltime, ambele centrate pe orizontala in zona de continut. */
+.puzzle-room {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  height: calc(100vh - 96px);
+}
+
+.puzzle-room__board-col {
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #201f1c;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.puzzle-room__board-col .board-grid {
+  width: 100%;
+  height: 100%;
+}
+
+.puzzle-room__sidebar {
+  height: 100%;
+  width: 320px;
+  flex: 0 0 320px;
+  background: #201f1c;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+.puzzle-room__streak {
+  background: #2b2a27;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.puzzle-room__streak-current {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.puzzle-room__streak-number {
+  font-size: 40px;
+  font-weight: 700;
+  color: #81b64c;
+  line-height: 1;
+}
+
+.puzzle-room__streak-label {
+  font-size: 13px;
+  color: #b8b6b3;
+  margin-top: 4px;
+}
+
+.puzzle-room__streak-best {
+  font-size: 13px;
+  color: #b8b6b3;
+}
+
+.puzzle-room__streak-best strong {
+  color: #fff;
+}
+
+.puzzle-room__reveal-btn {
+  margin-top: auto;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #b33a3a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.puzzle-room__reveal-btn:hover:not(:disabled) {
+  background: #c94747;
+}
+
+.puzzle-room__reveal-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.puzzle-room__reveal-btn--next {
+  background: #4caf50;
+}
+
+.puzzle-room__reveal-btn--next:hover:not(:disabled) {
+  background: #5cc25f;
+}
+
+@media (max-width: 900px) {
+  .puzzle-room {
+    flex-direction: column;
+    height: auto;
+    align-items: center;
+  }
+
+  .puzzle-room__board-col {
+    height: auto;
+    width: min(100%, 500px);
+    aspect-ratio: 1 / 1;
+  }
+
+  .puzzle-room__sidebar {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
   }
 }

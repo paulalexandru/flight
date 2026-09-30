@@ -23,6 +23,64 @@ const ORIENTATIONS: PlaneOrientation[] = ["N", "E", "S", "W"];
 
 type ShotEntry = { cell: Cell; status: ShotResult };
 
+/** Motivul (strategia) pentru care robotul a ales o anumită celulă, folosit doar
+ * pentru afișare în jurnalul de activitate (ca să poți verifica dacă robotul face
+ * ce trebuie), nu are niciun efect asupra logicii jocului. */
+export type RobotShotReason =
+  | "random"
+  | "hunt-line"
+  | "hunt-neighbor"
+  | "shape-deduction"
+  | "heatmap"
+  | "cheating-peek-body"
+  | "cheating-peek-deduction-fallback";
+
+export const ROBOT_SHOT_REASON_LABELS: Record<RobotShotReason, string> = {
+  random: "a tras la întâmplare (nicio lovitură anterioară de urmărit)",
+  "hunt-line": "a continuat în linie dreaptă de la loviturile anterioare",
+  "hunt-neighbor": "a țintit o celulă vecină unei lovituri anterioare",
+  "shape-deduction": "a dedus forma avionului din loviturile cunoscute",
+  heatmap: "a ales celula cu cea mai mare probabilitate de a fi capul unui avion",
+  "cheating-peek-body": "a tras cu ochiul la o celulă din corpul unui avion nedescoperit",
+  "cheating-peek-deduction-fallback": "a folosit deducția (mutare de tras cu ochiul, dar deducția era deja aproape rezolvată)",
+};
+
+/** Pentru deducția de formă, un detaliu suplimentar care explică pe ce lovituri
+ * concrete s-a bazat robotul și ce parte a avionului a considerat că reprezintă
+ * fiecare dintre ele (coadă/aripă/cap), ca să fie clar cum a judecat situația. */
+export type RobotShotResult = { cell: Cell; reason: RobotShotReason; detail?: string };
+
+/** Parte anatomică a avionului asociată fiecărui offset din PLANE_OFFSETS_NORTH,
+ * în aceeași ordine (vezi desenul din planes.ts): primele 3 sunt coada (aripa din
+ * spate, cea mai depărtată de cap), a 4-a e corpul/fuselajul, următoarele 5 sunt
+ * aripile principale, iar ultima (0,0) e capul avionului. */
+const PLANE_PART_LABELS = [
+  "coadă", "coadă", "coadă",
+  "fuselaj",
+  "aripă", "aripă", "aripă", "aripă", "aripă",
+  "cap",
+] as const;
+
+function cellLabel(cell: Cell): string {
+  return `${String.fromCharCode(65 + cell.col)}${cell.row + 1}`;
+}
+
+/** Pentru un cap+orientare deduse, descrie ce lovituri cunoscute (dintre cele
+ * "relevante", adică nu deja explicate de alt avion găsit) s-au potrivit cu forma
+ * respectivă și ce parte a avionului reprezintă fiecare, ca text lizibil. */
+function describeShapeMatch(head: Cell, orientation: PlaneOrientation, relevantHitKeys: Set<string>): string {
+  const offsets = getPlaneShape(orientation);
+  const parts: string[] = [];
+  offsets.forEach((offset, i) => {
+    const cell = { row: head.row + offset.row, col: head.col + offset.col };
+    if (relevantHitKeys.has(cellKey(cell))) {
+      parts.push(`${cellLabel(cell)} (${PLANE_PART_LABELS[i]})`);
+    }
+  });
+  if (parts.length === 0) return "";
+  return `a considerat loviturile ${parts.join(", ")} ca aparținând aceluiași avion și a țintit capul dedus în ${cellLabel(head)}`;
+}
+
 function pickRandomFrom(cells: Cell[]): Cell {
   return cells[Math.floor(Math.random() * cells.length)];
 }
@@ -41,7 +99,7 @@ function getAllUnshotCells(shotKeys: Set<string>): Cell[] {
 /** Nivel 2 (Mediu) - "hunt & target": după o lovitură reușită, țintește celulele
  * adiacente (N/S/E/V) ca să găsească restul avionului; dacă a găsit deja două
  * lovituri aliniate, preferă să continue în linie dreaptă. */
-function pickHuntTarget(history: ShotEntry[], shotKeys: Set<string>): Cell | null {
+function pickHuntTarget(history: ShotEntry[], shotKeys: Set<string>): RobotShotResult | null {
   const hitCells = history.filter((s) => s.status === "hit" || s.status === "head").map((s) => s.cell);
   if (hitCells.length === 0) return null;
 
@@ -69,7 +127,9 @@ function pickHuntTarget(history: ShotEntry[], shotKeys: Set<string>): Cell | nul
       }
     }
   }
-  if (lineExtensions.size > 0) return pickRandomFrom([...lineExtensions.values()]);
+  if (lineExtensions.size > 0) {
+    return { cell: pickRandomFrom([...lineExtensions.values()]), reason: "hunt-line" };
+  }
 
   const neighbors = new Map<string, Cell>();
   const deltas = [
@@ -85,7 +145,7 @@ function pickHuntTarget(history: ShotEntry[], shotKeys: Set<string>): Cell | nul
     }
   }
   if (neighbors.size === 0) return null;
-  return pickRandomFrom([...neighbors.values()]);
+  return { cell: pickRandomFrom([...neighbors.values()]), reason: "hunt-neighbor" };
 }
 
 /** Calculează, pentru toate plasările posibile de avion pe toată tabla, câte dintre
@@ -135,10 +195,14 @@ function pickMaxFrequency(freq: Map<string, number>): Cell | null {
  * a avionului lovit), nu doar o singură celulă izolat - astfel deducția ține cont de
  * TOATE punctele ochite împreună, nu doar de una singură. Dacă mai multe plasări explică
  * la fel de multe lovituri, țintește capul cel mai frecvent dintre ele. */
-function getShapeDeductionCandidates(history: ShotEntry[], shotKeys: Set<string>, missKeys: Set<string>): Cell[] {
+function getShapeDeductionCandidates(
+  history: ShotEntry[],
+  shotKeys: Set<string>,
+  missKeys: Set<string>
+): { heads: { head: Cell; orientation: PlaneOrientation }[]; relevantHitKeys: Set<string> } {
   const headCells = history.filter((s) => s.status === "head").map((s) => s.cell);
   const allHitCells = history.filter((s) => s.status === "hit" || s.status === "head").map((s) => s.cell);
-  if (allHitCells.length === 0) return [];
+  if (allHitCells.length === 0) return { heads: [], relevantHitKeys: new Set() };
 
   // Pentru fiecare cap deja găsit, deducem orientarea cea mai probabilă a avionului
   // respectiv (cea susținută de cele mai multe din loviturile cunoscute) și excludem
@@ -174,10 +238,10 @@ function getShapeDeductionCandidates(history: ShotEntry[], shotKeys: Set<string>
     if (!excludedCellKeys.has(key)) relevantHitKeys.add(key);
   }
 
-  if (relevantHitKeys.size === 0) return [];
+  if (relevantHitKeys.size === 0) return { heads: [], relevantHitKeys };
 
   let bestSupport = 0;
-  const bestHeads: Cell[] = [];
+  const bestHeads: { head: Cell; orientation: PlaneOrientation }[] = [];
 
   for (let row = 0; row < BOARD_SIZE; row++) {
     for (let col = 0; col < BOARD_SIZE; col++) {
@@ -193,27 +257,34 @@ function getShapeDeductionCandidates(history: ShotEntry[], shotKeys: Set<string>
         if (support > bestSupport) {
           bestSupport = support;
           bestHeads.length = 0;
-          bestHeads.push(head);
+          bestHeads.push({ head, orientation });
         } else if (support === bestSupport) {
-          bestHeads.push(head);
+          bestHeads.push({ head, orientation });
         }
       }
     }
   }
 
-  return bestHeads;
+  return { heads: bestHeads, relevantHitKeys };
 }
 
-function pickShapeDeduction(history: ShotEntry[], shotKeys: Set<string>, missKeys: Set<string>): Cell | null {
-  const bestHeads = getShapeDeductionCandidates(history, shotKeys, missKeys);
+function pickShapeDeduction(history: ShotEntry[], shotKeys: Set<string>, missKeys: Set<string>): RobotShotResult | null {
+  const { heads: bestHeads, relevantHitKeys } = getShapeDeductionCandidates(history, shotKeys, missKeys);
   if (bestHeads.length === 0) return null;
 
   const freq = new Map<string, number>();
-  for (const head of bestHeads) {
+  for (const { head } of bestHeads) {
     const key = cellKey(head);
     freq.set(key, (freq.get(key) ?? 0) + 1);
   }
-  return pickMaxFrequency(freq);
+  const cell = pickMaxFrequency(freq);
+  if (!cell) return null;
+
+  // Pentru mesajul din jurnal, alegem orientarea candidată corespunzătoare
+  // celulei alese (poate să apară cu mai multe orientări, luăm prima).
+  const match = bestHeads.find((c) => cellKey(c.head) === cellKey(cell));
+  const detail = match ? describeShapeMatch(match.head, match.orientation, relevantHitKeys) : undefined;
+  return { cell, reason: "shape-deduction", detail };
 }
 
 /** Nivel 4 (Expert): hartă de probabilitate pe toată tabla - clasicul algoritm
@@ -234,25 +305,32 @@ function pickExpertOrCheating(
   shotKeys: Set<string>,
   missKeys: Set<string>,
   candidates: Cell[]
-): Cell {
-  const deductionCandidates = getShapeDeductionCandidates(history, shotKeys, missKeys);
+): RobotShotResult {
+  const { heads: deductionCandidates, relevantHitKeys } = getShapeDeductionCandidates(history, shotKeys, missKeys);
   if (deductionCandidates.length > 0) {
-    return pickRandomFrom(deductionCandidates);
+    const chosen = pickRandomFrom(deductionCandidates.map((c) => c.head));
+    const match = deductionCandidates.find((c) => cellKey(c.head) === cellKey(chosen));
+    const detail = match ? describeShapeMatch(match.head, match.orientation, relevantHitKeys) : undefined;
+    return { cell: chosen, reason: "shape-deduction", detail };
   }
-  return pickHeatmap(shotKeys, missKeys) ?? pickRandomFrom(candidates);
+  const heatmapCell = pickHeatmap(shotKeys, missKeys);
+  return heatmapCell
+    ? { cell: heatmapCell, reason: "heatmap" }
+    : { cell: pickRandomFrom(candidates), reason: "random" };
 }
 
 /** Nivel 5 (Foarte greu): joacă exact ca nivelul Expert (deducție + probabilitate, fără
  * trișare) majoritatea timpului, dar din când în când (aleator, la fiecare 2 sau 3
  * mutări) "trage cu ochiul" la o celulă din corpul (nu capul) unui avion nedescoperit
- * încă - un mic avantaj în plus față de Expert, nu o victorie instantă. */
+ * încă - preferabil unul deja atins, ca să-i ghicească mai repede capul - un mic
+ * avantaj în plus față de Expert, nu o victorie instantă. */
 function pickCheating(
   myPlanes: PlanePlacement[],
   history: ShotEntry[],
   shotKeys: Set<string>,
   missKeys: Set<string>,
   candidates: Cell[]
-): Cell {
+): RobotShotResult {
   // Alege dacă mutarea curentă e una de "tras cu ochiul", alternând intervale de 2 și
   // 3 mutări începând chiar de la a doua mutare a meciului (2, 5, 7, 10, 12, ...) - astfel
   // primul peek chiar se întâmplă garantat la a 2-a mutare, nu doar "din întâmplare".
@@ -269,12 +347,15 @@ function pickCheating(
     return pickExpertOrCheating(history, shotKeys, missKeys, candidates);
   }
 
-  // Dacă există lovituri relevante (dintr-un avion nerezolvat), asta are prioritate
-  // absolută față de "tras cu ochiul" - nu are sens să trișăm când oricum putem deduce
-  // corect din loviturile deja date.
-  const deductionCandidates = getShapeDeductionCandidates(history, shotKeys, missKeys);
-  if (deductionCandidates.length > 0) {
-    return pickRandomFrom(deductionCandidates);
+  // Trișarea are prioritate față de deducție, CU EXCEPȚIA cazului în care deducția e
+  // deja aproape rezolvată (cel mult 2 candidați posibili pentru cap) - atunci nu are
+  // sens să "irosim" peek-ul, fiindcă oricum am ghici capul aproape sigur din deducție.
+  const { heads: deductionCandidates2, relevantHitKeys: relevantHitKeys2 } = getShapeDeductionCandidates(history, shotKeys, missKeys);
+  if (deductionCandidates2.length > 0 && deductionCandidates2.length <= 2) {
+    const chosen = pickRandomFrom(deductionCandidates2.map((c) => c.head));
+    const match = deductionCandidates2.find((c) => cellKey(c.head) === cellKey(chosen));
+    const detail = match ? describeShapeMatch(match.head, match.orientation, relevantHitKeys2) : undefined;
+    return { cell: chosen, reason: "shape-deduction", detail };
   }
 
   {
@@ -295,35 +376,43 @@ function pickCheating(
         if (!shotKeys.has(cellKey(c))) bodyCells.push(c);
       }
     }
-    if (bodyCells.length > 0) return pickRandomFrom(bodyCells);
+    if (bodyCells.length > 0) return { cell: pickRandomFrom(bodyCells), reason: "cheating-peek-body" };
+  }
+
+  // N-a găsit nicio celulă de trișat (toate avioanele fie nu au fost atinse deloc și
+  // "capul" lor ar fi oricum ghicit corect din prima, fie sunt deja rezolvate) - dacă
+  // exista totuși o deducție cu mai multe variante, o folosim acum ca fallback.
+  if (deductionCandidates2.length > 0) {
+    return { cell: pickRandomFrom(deductionCandidates2.map((c) => c.head)), reason: "cheating-peek-deduction-fallback" };
   }
   return pickExpertOrCheating(history, shotKeys, missKeys, candidates);
 }
 
 /**
- * Alege următoarea celulă în care trage robotul, în funcție de dificultatea aleasă.
- * `myPlanes` e folosit doar la nivelul "cheating" (robotul își "amintește" pozițiile
- * avioanelor jucătorului).
+ * Alege următoarea celulă în care trage robotul, în funcție de dificultatea aleasă,
+ * împreună cu motivul (strategia) pentru care a ales acea celulă - util pentru a
+ * afișa în jurnalul de activitate ce a "gândit" robotul, ca să poți verifica dacă
+ * face ce trebuie. `myPlanes` e folosit doar la nivelul "cheating" (robotul își
+ * "amintește" pozițiile avioanelor jucătorului).
  */
 export function pickRobotShot(
   difficulty: RobotDifficulty,
   history: ShotEntry[],
   myPlanes: PlanePlacement[]
-): Cell {
+): RobotShotResult {
   const shotKeys = new Set(history.map((s) => cellKey(s.cell)));
   const missKeys = new Set(history.filter((s) => s.status === "miss").map((s) => cellKey(s.cell)));
   const candidates = getAllUnshotCells(shotKeys);
 
   switch (difficulty) {
     case "easy":
-      return pickRandomFrom(candidates);
+      return { cell: pickRandomFrom(candidates), reason: "random" };
     case "medium":
-      return pickHuntTarget(history, shotKeys) ?? pickRandomFrom(candidates);
+      return pickHuntTarget(history, shotKeys) ?? { cell: pickRandomFrom(candidates), reason: "random" };
     case "advanced":
       return (
         pickShapeDeduction(history, shotKeys, missKeys) ??
-        pickHuntTarget(history, shotKeys) ??
-        pickRandomFrom(candidates)
+        pickHuntTarget(history, shotKeys) ?? { cell: pickRandomFrom(candidates), reason: "random" }
       );
     case "expert":
       return pickExpertOrCheating(history, shotKeys, missKeys, candidates);

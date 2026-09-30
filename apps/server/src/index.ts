@@ -9,7 +9,16 @@ import { historyRouter } from "./routes/history";
 import { registerMatchmakingHandlers } from "./matchmaking/matchmaking";
 import { registerRoomHandlers } from "./rooms/roomPresence";
 import { registerBattleHandlers } from "./battle/battleSocket";
-import { registerConnection, unregisterConnection, getOnlineUsersCount } from "./rooms/roomRoster";
+import { initBattleTimers } from "./battle/battleManager";
+import {
+  registerConnection,
+  unregisterConnection,
+  getOnlineUsersCount,
+  getOnlinePlayerIds,
+  getRoomRoster,
+  getRoomIdForPlayer,
+} from "./rooms/roomRoster";
+import { getActiveBattlesSummary } from "./battle/battleManager";
 
 const PORT = Number(process.env.PORT ?? 4000);
 // CLIENT_ORIGIN acceptă o listă separată prin virgulă (ex: pentru acces din rețea locală).
@@ -27,6 +36,7 @@ const httpServer = createServer(app);
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: { origin: CLIENT_ORIGINS },
 });
+initBattleTimers(io);
 
 // Faza curentă: doar matchmaking + prezență în sală, fără logica jocului încă
 // (game:join/placePlanes/shoot rămân definite în types pentru etapa următoare).
@@ -40,6 +50,16 @@ io.on("connection", (socket) => {
   // recalculat și retransmis tuturor la fiecare conectare/deconectare.
   registerConnection(playerId);
   io.emit("presence:onlineCount", { count: getOnlineUsersCount() });
+
+  // Instantaneu al lobby-ului pentru pagina principală (meciuri în desfășurare
+  // + jucători online), la cerere (nu împins automat pe schimbări de stare,
+  // suficient pentru un ecran ne-critic de tip lobby).
+  socket.on("lobby:requestSnapshot", () => {
+    const activeMatches = getActiveBattlesSummary(getRoomRoster);
+    const onlinePlayerIds = getOnlinePlayerIds();
+    const busyPlayerIds = onlinePlayerIds.filter((id) => getRoomIdForPlayer(id) != null);
+    socket.emit("lobby:snapshot", { activeMatches, onlinePlayerIds, busyPlayerIds });
+  });
 
   socket.on("disconnect", () => {
     unregisterConnection(playerId);

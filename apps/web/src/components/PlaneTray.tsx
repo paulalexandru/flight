@@ -2,10 +2,10 @@ import { useRef } from "react";
 import { BOARD_SIZE, getPlaneShape } from "@flight/game-logic";
 import type { PlaneOrientation } from "@flight/types";
 
-// Cea mai mare latura pe care o poate avea avionul in oricare orientare (N/S: 3x4, E/W: 4x3)
-// -- pastram cutia din jurul lui la aceasta dimensiune fixa, ca rotirea sa nu schimbe
-// niciodata inaltimea coloanei din jur.
-const PLANE_BOX_SIZE = 4;
+// Cea mai mare latura pe care o poate avea avionul in oricare orientare (N/S: 4 randuri x 5
+// coloane, E/W: 5 randuri x 4 coloane) -- pastram cutia din jurul lui la aceasta dimensiune
+// fixa, ca rotirea sa nu schimbe niciodata inaltimea coloanei din jur si sa nu taie nicio aripa.
+const PLANE_BOX_SIZE = 5;
 
 export interface TrayPlane {
   id: string;
@@ -151,17 +151,19 @@ export function PlaneTray({ planes, onDragStart, onRotate, onDragEnd, hint }: Pl
           }}
           onDragEnd={() => onDragEnd?.()}
         >
-          <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
-          <div className="plane-tray__controls">
-            <button
-              type="button"
-              className="plane-tray__rotate"
-              onClick={() => onRotate(currentPlane.id)}
-              title="Rotește avionul"
-            >
-              ⟳ Rotește
-            </button>
-            {planes.length > 1 && <span className="plane-tray__count">×{planes.length}</span>}
+          <div className="plane-tray__row">
+            <PlanePreview orientation={currentPlane.orientation} planeId={currentPlane.id} />
+            <div className="plane-tray__controls">
+              <button
+                type="button"
+                className="plane-tray__rotate"
+                onClick={() => onRotate(currentPlane.id)}
+                title="Rotește avionul"
+              >
+                ⟳ Rotește
+              </button>
+              {planes.length > 1 && <span className="plane-tray__count">×{planes.length}</span>}
+            </div>
           </div>
         </div>
       )}
