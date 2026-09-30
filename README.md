@@ -42,6 +42,36 @@ packages/
 npm run db:down
 ```
 
+## Reguli meci online (timpi/ieșiri din sală)
+
+- **Plasare avioane:** fereastră comună de **30s** pentru ambii jucători. Dacă unul
+  singur nu apasă "Gata" la timp, e scos automat din sală și meciul se anulează
+  pentru amândoi (id-ul de sală devine invalid, nu mai poate fi reintrat de niciunul).
+  Dacă niciunul nu apasă "Gata", ambii sunt redirecționați automat pe homepage.
+- **Ceas de luptă (chess clock):** fiecare jucător are **5 minute** în total, care
+  scad DOAR cât timp e rândul lui să tragă. Dacă îi expiră timpul pe propria mutare,
+  pierde automat.
+- **Ieșire din sală înainte ca lupta să înceapă** (în timpul fazei de plasare):
+  invalidează definitiv id-ul de sală — jucătorul care a ieșit nu mai poate reintra,
+  și nici adversarul nu mai poate fi repartizat acolo prin matchmaking. Cât unul
+  dintre jucători lipsește din sală în această fază, celuilalt i se dezactivează
+  avioanele/butoanele (nu mai poate continua plasarea) și i se afișează un mesaj
+  cu opțiunea de a încerca un meci nou.
+- **Ieșire din sală în timpul luptei:** un jucător poate ieși din sală de **maxim 3
+  ori** per meci. Cele 3 ieșiri împart un buget comun de **30s de grație** (nu 30s
+  la fiecare ieșire) — de exemplu, dacă la prima ieșire stă afară 5s și revine la
+  timp, la a doua ieșire mai are doar 25s din buget înainte să fie declarat abandon.
+  Dacă bugetul de 30s se epuizează fără să revină, sau dacă iese a **4-a oară**,
+  pierde automat meciul (abandon). Adversarul rămas în sală vede o numărătoare
+  inversă (🔌) cu timpul rămas din bugetul de grație până la abandonul automat.
+  Bugetul de ieșiri/grație se resetează complet la finalul fiecărui meci.
+- **Ceasul de luptă în timpul unei ieșiri:** dacă jucătorul care iese NU este cel
+  aflat la rând, ceasul jucătorului rămas (aflat la rând) intră în pauză cât timp
+  adversarul lipsește, ca să nu piardă timp din propriile 5 minute; se repornește
+  exact de unde a rămas dacă adversarul revine la timp. Dacă cel care iese este
+  chiar cel aflat la rând, propriul lui ceas continuă să curgă normal (penalizare
+  pentru că a plecat pe propria mutare).
+
 ## Layout responsive `.game-room`
 
 Pagina de joc (`GameRoom.tsx` + `styles.css`) folosește 3 coloane: două grid-uri de joc

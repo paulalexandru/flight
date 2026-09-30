@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Board } from "../components/Board";
 import { PlaneTray, NEXT_ORIENTATION } from "../components/PlaneTray";
-import { playShotSound, playCrowdWinSound, playCrowdLoseSound } from "../utils/sounds";
-import { pickRobotShot, DIFFICULTY_LABELS, DIFFICULTY_DESCRIPTIONS, type RobotDifficulty } from "../utils/robotAI";
+import { playShotSound, playCrowdLoseSound, playVictoryTrumpetSound } from "../utils/sounds";
+import {
+  pickRobotShot,
+  DIFFICULTY_LABELS,
+  DIFFICULTY_DESCRIPTIONS,
+  ROBOT_SHOT_REASON_LABELS,
+  type RobotDifficulty,
+} from "../utils/robotAI";
+import { emptyRobotScore, recordRobotResult, sumRobotScore, type RobotScore } from "../utils/robotScore";
 import {
   TOTAL_PLANES_PER_PLAYER,
   BOARD_SIZE,
@@ -88,9 +95,19 @@ export function PlayRobot() {
   const [winner, setWinner] = useState<"me" | "robot" | null>(null);
   const [robotPlanes, setRobotPlanes] = useState<PlanePlacement[]>([]);
 
+  // Controlează vizibilitatea popup-ului de final - permite jucătorului să-l închidă
+  // (X) pentru a se uita peste tablă, fără să iasă din faza "over".
+  const [showResultDialog, setShowResultDialog] = useState(false);
+
+  // Scor persistent (câștiguri/înfrângeri per dificultate), citit din localStorage
+  // la prima randare și actualizat la finalul fiecărei partide.
+  const [score, setScore] = useState<RobotScore>(emptyRobotScore);
+
   // Jurnal de activitate al sălii, ca la jocul online — dar cu robotul în locul
   // celuilalt jucător: intră imediat ce alegi dificultatea, iese când jocul se termină.
-  const [activity, setActivity] = useState<{ key: string; type: "joined" | "left" | "won" | "lost" }[]>([]);
+  const [activity, setActivity] = useState<
+    { key: string; type: "joined" | "left" | "won" | "lost" | "shot"; detail?: string }[]
+  >([]);
 
   // Notițe proprii pe tabla robotului (click-dreapta), pentru a schița unde crezi
   // că ar putea fi avioanele lui — pur vizuale, nu au nicio legătură cu logica jocului.
@@ -140,23 +157,38 @@ export function PlayRobot() {
   useEffect(() => {
     if (phase !== "battle" || isMyTurn) return;
     const timeout = window.setTimeout(() => {
-      const cell = pickRobotShot(difficulty, incomingShots, placedPlanes);
+      const { cell, reason, detail: reasonDetail } = pickRobotShot(difficulty, incomingShots, placedPlanes);
       const { result } = resolveShot(cell, placedPlanes, new Set(
         incomingShots.filter((s) => s.status !== "miss").map((s) => cellKey(s.cell))
       ));
       playShotSound(result);
       const nextIncoming = [...incomingShots, { cell, status: result }];
       setIncomingShots(nextIncoming);
+      // Afișăm în jurnal, la fiecare mutare a robotului, strategia pe baza căreia
+      // a ales celula respectivă - ca să poți verifica dacă face ce trebuie. Când
+      // există (deducție de formă), adăugăm și loviturile concrete considerate,
+      // plus ce parte a avionului (coadă/aripă/fuselaj/cap) au reprezentat ele.
+      setActivity((prev) => [
+        ...prev,
+        {
+          key: `robot-shot-${nextIncoming.length}`,
+          type: "shot",
+          detail: `${String.fromCharCode(65 + cell.col)}${cell.row + 1} — ${ROBOT_SHOT_REASON_LABELS[reason]}${
+            reasonDetail ? ` (${reasonDetail})` : ""
+          }`,
+        },
+      ]);
 
       const robotWon = hasFoundAllPlaneHeads(placedPlanes, nextIncoming.map((s) => ({ cell: s.cell, result: s.status, byPlayerId: "robot" })));
       if (robotWon) {
         playCrowdLoseSound();
         setWinner("robot");
+        setScore((prev) => recordRobotResult(prev, difficulty, "loss"));
+        setShowResultDialog(true);
         setPhase("over");
         setActivity((prev) => [
           ...prev,
           { key: "robot-lost", type: "lost" },
-          { key: "robot-left", type: "left" },
         ]);
       } else {
         setIsMyTurn(true);
@@ -226,6 +258,39 @@ export function PlayRobot() {
     setPhase("battle");
   };
 
+  // Permite un meci nou fără a reveni la alegerea dificultății - păstrăm aceeași
+  // dificultate și trecem direct la faza de plasare a avioanelor.
+  const handleNewGame = () => {
+    setPlacedPlanes([]);
+    setTrayPlanes(createEmptyTrayPlanes());
+    setDraggingTrayId(null);
+    setRobotPlanes([]);
+    setMyShots([]);
+    setIncomingShots([]);
+    setWinner(null);
+    setShowResultDialog(false);
+    setAnnotations({});
+    setAnnotationColorIndex(0);
+    setActivity([{ key: "robot-joined", type: "joined" }]);
+    setPhase("placing");
+  };
+
+  // Renunță la meciul curent și revine la ecranul de alegere a dificultății.
+  const handleChangeDifficulty = () => {
+    setPlacedPlanes([]);
+    setTrayPlanes(createEmptyTrayPlanes());
+    setDraggingTrayId(null);
+    setRobotPlanes([]);
+    setMyShots([]);
+    setIncomingShots([]);
+    setWinner(null);
+    setShowResultDialog(false);
+    setAnnotations({});
+    setAnnotationColorIndex(0);
+    setActivity([]);
+    setPhase("selectDifficulty");
+  };
+
   const handleShootRobot = (cell: Cell) => {
     if (phase !== "battle" || !isMyTurn) return;
     if (myShots.some((s) => s.cell.row === cell.row && s.cell.col === cell.col)) return;
@@ -234,7 +299,6 @@ export function PlayRobot() {
       myShots.filter((s) => s.status !== "miss").map((s) => cellKey(s.cell))
     );
     const { result } = resolveShot(cell, robotPlanesRef.current, previousHitKeys);
-    playShotSound(result);
     const nextShots = [...myShots, { cell, status: result }];
     setMyShots(nextShots);
 
@@ -243,8 +307,12 @@ export function PlayRobot() {
       nextShots.map((s) => ({ cell: s.cell, result: s.status, byPlayerId: "me" }))
     );
     if (iWon) {
-      playCrowdWinSound();
+      // Nu mai redăm și sunetul de "cap lovit" aici - la victorie vrem un
+      // singur sunet (fanfara), nu două suprapuse.
+      playVictoryTrumpetSound();
       setWinner("me");
+      setScore((prev) => recordRobotResult(prev, difficulty, "win"));
+      setShowResultDialog(true);
       setPhase("over");
       setActivity((prev) => [
         ...prev,
@@ -252,12 +320,15 @@ export function PlayRobot() {
         { key: "robot-left", type: "left" },
       ]);
     } else {
+      playShotSound(result);
       setIsMyTurn(false);
     }
   };
 
-
   const isPlacingPhase = phase === "placing";
+  // Nu afișăm badge-ul de scor la 0/0 (nicio partidă jucată încă la dificultatea
+  // curentă) - apare abia după ce se termină prima partidă la acea dificultate.
+  const hasPlayedDifficulty = score[difficulty].wins + score[difficulty].losses > 0;
 
   return (
     <div className="game-room">
@@ -269,9 +340,14 @@ export function PlayRobot() {
                 👤
               </span>
               <span className="board-title__name-row">
-                Tu
-                {phase === "battle" && isMyTurn && <span className="turn-hourglass">⏳</span>}
+                <span className="board-title__name-group">
+                  Tu
+                  {phase === "battle" && isMyTurn && <span className="turn-hourglass">⏳</span>}
+                </span>
               </span>
+              {phase !== "selectDifficulty" && !isPlacingPhase && hasPlayedDifficulty && (
+                <span className="player-score-badge">{score[difficulty].wins}</span>
+              )}
             </div>
             <Board
               planes={placedPlanes}
@@ -311,13 +387,12 @@ export function PlayRobot() {
                   onRotate={handleRotateTrayPlane}
                   hint='Așează-ți avioanele și apasă "Gata" pentru a începe.'
                 />
-                {placedPlanes.length > 0 && (
-                  <div className="plane-tray placed-planes-hint">
-                    <p className="plane-tray__empty">
-                      Trage un avion plasat pentru a-l muta, sau dă dublu-click pentru a-l roti.
-                    </p>
-                  </div>
-                )}
+                <div className="plane-tray placed-planes-hint">
+                  <p className="plane-tray__empty">
+                    Trage un avion pentru a-l plasa pe tablă. După ce l-ai plasat, îl poți trage
+                    din nou pentru a-l repoziționa sau dă dublu-click pe el pentru a-l roti.
+                  </p>
+                </div>
                 <div className="board-actions-row">
                   <button className="random-placement-button" onClick={handleRandomPlacement}>
                     Aranjare aleatorie
@@ -347,9 +422,14 @@ export function PlayRobot() {
                     🤖
                   </span>
                   <span className="board-title__name-row">
-                    Robotul
-                    {!isMyTurn && <span className="turn-hourglass">⏳</span>}
+                    <span className="board-title__name-group">
+                      Robotul
+                      {!isMyTurn && <span className="turn-hourglass">⏳</span>}
+                    </span>
                   </span>
+                  {hasPlayedDifficulty && (
+                    <span className="player-score-badge">{score[difficulty].losses}</span>
+                  )}
                 </div>
                 <Board
                   onCellClick={handleShootRobot}
@@ -366,7 +446,14 @@ export function PlayRobot() {
                   <span className="player-avatar" aria-hidden="true">
                     🤖
                   </span>
-                  <span className="board-title__name-row">Robotul</span>
+                  <span className="board-title__name-row">
+                    <span className="board-title__name-group">
+                      Robotul
+                    </span>
+                  </span>
+                  {hasPlayedDifficulty && (
+                    <span className="player-score-badge">{score[difficulty].losses}</span>
+                  )}
                 </div>
                 <Board markedCells={myShots} planes={robotPlanes} />
               </>
@@ -382,7 +469,9 @@ export function PlayRobot() {
             <span className="game-room__difficulty-tag"> ({DIFFICULTY_LABELS[difficulty]})</span>
           )}
         </h2>
-        <h3 className="game-room__sidebar-title">Jucători</h3>
+        <p className="game-room__total-score">
+          Total (toate dificultățile): {sumRobotScore(score).wins}V / {sumRobotScore(score).losses}Î
+        </p>
         <ul className="activity-log">
           {activity.map((entry) => (
             <li
@@ -395,6 +484,11 @@ export function PlayRobot() {
                 <span className="activity-log__action">
                   {entry.type === "won" ? "Ai câștigat jocul! 🏆" : "Ai pierdut jocul."}
                 </span>
+              ) : entry.type === "shot" ? (
+                <>
+                  <span className="activity-log__player">Robotul</span>
+                  <span className="activity-log__action">a tras pe {entry.detail}</span>
+                </>
               ) : (
                 <>
                   <span className="activity-log__player">Robotul</span>
@@ -410,7 +504,42 @@ export function PlayRobot() {
             <li className="activity-log__empty">{isMyTurn ? "Este rândul tău să tragi." : "Robotul se gândește..."}</li>
           )}
         </ul>
+        {phase === "over" && (
+          <button className="sidebar-rematch-button" onClick={handleNewGame}>
+            Joacă din nou
+          </button>
+        )}
       </aside>
+
+      {phase === "over" && winner && showResultDialog && (
+        <div className="challenge-dialog-overlay">
+          <div className="challenge-dialog">
+            <button
+              className="challenge-dialog__close"
+              aria-label="Închide"
+              onClick={() => setShowResultDialog(false)}
+            >
+              ×
+            </button>
+            <h3 className="challenge-dialog__title">
+              {winner === "me" ? "Ai câștigat! 🏆" : "Ai pierdut."}
+            </h3>
+            <p className="challenge-dialog__text game-over-dialog__text">
+              {winner === "me"
+                ? `Ai câștigat în ${myShots.length} mutări.`
+                : `Te-a bătut în ${incomingShots.length} mutări.`}
+            </p>
+            <div className="game-over-dialog__actions">
+              <button className="game-over-dialog__primary" onClick={handleNewGame}>
+                Joacă din nou
+              </button>
+              <button className="game-over-dialog__secondary" onClick={handleChangeDifficulty}>
+                Schimbă dificultatea
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

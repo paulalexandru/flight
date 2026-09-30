@@ -1,6 +1,6 @@
 import type { Server, Socket } from "socket.io";
 import type { ClientToServerEvents, PlanePlacement, ServerToClientEvents } from "@flight/types";
-import { getRoomRoster } from "../rooms/roomRoster";
+import { getRoomRoster, isPlayerInRoom } from "../rooms/roomRoster";
 import {
   submitPlacement,
   getReadyPlayerIds,
@@ -10,7 +10,10 @@ import {
   getWinnerId,
   getPlanesFor,
   resetBattle,
+  cancelPlacementWindow,
+  getBattleClockSnapshot,
 } from "./battleManager";
+import { resetLeaveTrackingForGame } from "../rooms/roomPresence";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -26,6 +29,12 @@ function otherPlayerId(gameId: string, playerId: string): string | null {
  */
 export function registerBattleHandlers(io: AppServer, socket: AppSocket, playerId: string): void {
   socket.on("placement:ready", ({ gameId, planes }) => {
+    // Spectatorii nu pot participa la joc - orice acțiune de plasare/tragere e
+    // ignorată dacă playerId nu e unul dintre cei 2 jucători reali ai sălii.
+    if (!isPlayerInRoom(gameId, playerId)) {
+      socket.emit("game:error", { message: "Ești doar spectator în această sală." });
+      return;
+    }
     const result = submitPlacement(gameId, playerId, planes);
     if (!result.ok) {
       socket.emit("game:error", { message: result.error });
@@ -33,15 +42,22 @@ export function registerBattleHandlers(io: AppServer, socket: AppSocket, playerI
     }
 
     io.to(gameId).emit("placement:status", { gameId, readyPlayerIds: getReadyPlayerIds(gameId) });
+    io.to(gameId).emit("room:activity", { gameId, playerId, type: "placed", at: Date.now() });
 
     const roomPlayerIds = getRoomRoster(gameId);
     const startResult = tryStartBattle(gameId, roomPlayerIds);
     if (startResult.started) {
       io.to(gameId).emit("battle:started", { gameId, firstPlayerId: startResult.firstPlayerId });
+      const clockSnapshot = getBattleClockSnapshot(gameId);
+      io.to(gameId).emit("battle:clock", { gameId, ...clockSnapshot });
     }
   });
 
   socket.on("battle:shoot", ({ gameId, cell }) => {
+    if (!isPlayerInRoom(gameId, playerId)) {
+      socket.emit("game:error", { message: "Ești doar spectator în această sală." });
+      return;
+    }
     if (!isBattleStarted(gameId)) {
       socket.emit("game:error", { message: "Lupta nu a început încă." });
       return;
@@ -70,7 +86,11 @@ export function registerBattleHandlers(io: AppServer, socket: AppSocket, playerI
           [opponentId]: getPlanesFor(gameId, opponentId),
         };
         io.to(gameId).emit("battle:over", { gameId, winnerId, planes });
+        resetLeaveTrackingForGame(gameId, [playerId, opponentId]);
       }
+    } else {
+      const clockSnapshot = getBattleClockSnapshot(gameId);
+      io.to(gameId).emit("battle:clock", { gameId, ...clockSnapshot });
     }
   });
 
@@ -80,6 +100,8 @@ export function registerBattleHandlers(io: AppServer, socket: AppSocket, playerI
     const roster = getRoomRoster(gameId);
     if (roster.length === 0) {
       resetBattle(gameId);
+    } else if (roster.length < 2) {
+      cancelPlacementWindow(gameId);
     }
   });
 }
